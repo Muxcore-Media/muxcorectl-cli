@@ -46,6 +46,15 @@ export MUXCORE_TOKEN="$(cat ../_mvp/run/admin.token)"   # path may vary
 muxcorectl --insecure storage ls
 muxcorectl --insecure audit query --max 20
 muxcorectl --insecure spool resolve media
+muxcorectl --insecure schedules list
+muxcorectl --insecure schedules add --name hourly-ping --cron '@hourly' --webhook http://127.0.0.1:9999/hook
+```
+
+Override discovery when needed:
+
+```bash
+muxcorectl schedules list --scheduler-url http://127.0.0.1:9200
+# or: export SCHEDULER_URL=http://127.0.0.1:9200
 ```
 
 ## Commands
@@ -60,6 +69,7 @@ muxcorectl --insecure spool resolve media
 | `storage ls [prefix]` | List storage keys |
 | `audit query` | Query audit log |
 | `spool resolve <tag>` | Fetch spool tag without deploying |
+| `schedules list` / `status` / `add` / `cancel` | Manage `scheduler-cron` via its HTTP API (`--scheduler-url` / `SCHEDULER_URL`, or discover `HttpAddr`) |
 
 ## Flags / env
 
