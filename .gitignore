@@ -1,6 +1,6 @@
-bin/
-dist/
-muxcorectl
+/bin/
+/dist/
+/muxcorectl
 *.exe
 *.test
 .idea/

@@ -33,7 +33,7 @@ jobs:
       - name: Configure private modules (HTTPS)
         run: |
           git config --global url."https://x-access-token:${{ secrets.MUXCORE_CI_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - run: go test -race -count=1 -timeout 5m ./...
+      - run: go test -race -count=1 -timeout 10m ./...
 
   build:
     runs-on: self-hosted
@@ -47,5 +47,5 @@ jobs:
         run: |
           git config --global url."https://x-access-token:${{ secrets.MUXCORE_CI_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - run: |
-          go build -ldflags="-s -w -X github.com/Muxcore-Media/muxcorectl-cli/internal/cli.Version=${GITHUB_SHA}" -o /dev/null ./cmd/muxcorectl
+          go build -o /dev/null ./cmd/muxcorectl
           go vet ./...

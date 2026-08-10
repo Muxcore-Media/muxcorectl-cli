@@ -1,66 +1,80 @@
 # muxcorectl
 
-Operator CLI for a running [MuxCore](https://github.com/Muxcore-Media/core) (`muxcored`) node.
+Operator CLI for a running MuxCore (`muxcored`) node. Clean rewrite — do **not** confuse with the archived `muxcorectl` dump.
 
-Clean replacement for the archived polluted `muxcorectl` dump — this repo is `muxcorectl-cli` on disk/GitHub so it never collides with that tree.
+Talks to muxcored over gRPC (core SDK client). For laptop / fixture stacks, dial with insecure-dev TLS disabled.
 
-Talks to `muxcored` over gRPC via `github.com/Muxcore-Media/core/sdk/go/client` (**pinned to core `v0.5.0`**).
+## Install
 
-## Laptop usage (with `_mvp`)
+```bash
+go install github.com/Muxcore-Media/muxcorectl-cli/cmd/muxcorectl@latest
+```
 
-With the host stack up (`_mvp/run-host.sh`), muxcored listens on `127.0.0.1:9090` with TLS disabled:
+Or build from this repo:
+
+```bash
+go build -o bin/muxcorectl ./cmd/muxcorectl
+```
+
+Requires Go 1.26+ and access to `github.com/Muxcore-Media/core` (`GOPRIVATE=github.com/Muxcore-Media/*` for private modules).
+
+## Laptop usage
+
+Against a local host stack (`_mvp` / `muxcore-installer`) listening on `127.0.0.1:9090`:
 
 ```bash
 export MUXCORE_INSECURE_DISABLE_TLS=true
-export MUXCORE_GRPC_ADDR=127.0.0.1:9090   # optional; this is the default
-
-go install github.com/Muxcore-Media/muxcorectl-cli/cmd/muxcorectl@latest
-# or from a checkout:
-go build -o muxcorectl ./cmd/muxcorectl
+# optional: export MUXCORE_GRPC_ADDR=127.0.0.1:9090
+# optional: export MUXCORE_TOKEN=…   # or MUXCORE_ADMIN_TOKEN
 
 muxcorectl version
 muxcorectl modules list
-muxcorectl modules status auth-local
+muxcorectl modules status
 muxcorectl cluster status
 ```
 
-Equivalent flags (no env):
+Equivalent flags (override env):
 
 ```bash
 muxcorectl --insecure --addr 127.0.0.1:9090 modules list
 ```
 
-RPCs that are not on the public discovery allowlist (storage / audit / spool) need a bearer session token from `auth-local`:
-
-```bash
-export MUXCORE_TOKEN="$(cat ../_mvp/run/admin.token)"   # path may vary
-muxcorectl --insecure storage ls
-muxcorectl --insecure audit query --max 20
-muxcorectl --insecure spool resolve default
-```
-
 ## Commands
 
-| Command | Notes |
-|---------|--------|
-| `muxcorectl version` | CLI version |
-| `muxcorectl modules list` | `Discovery.ListAll` |
-| `muxcorectl modules status [id]` | Resolve one or summarize all |
-| `muxcorectl cluster status` | Members + leader |
-| `muxcorectl events tail [--type=*]` | Subscribe until Ctrl-C |
-| `muxcorectl storage ls [prefix]` | Requires auth when authorizer is wired |
-| `muxcorectl audit query` | Requires auth when authorizer is wired |
-| `muxcorectl spool resolve <tag>` | `SpoolService.FetchTag` |
+| Command | Description |
+|---------|-------------|
+| `version` | Print CLI version |
+| `modules list` | List modules (`Discovery.ListAll`) |
+| `modules status [id]` | One module or all |
+| `cluster status` | Members + leader |
+| `events tail` | Subscribe to events (`--type`, `--max`) |
+| `storage ls [prefix]` | List storage keys |
+| `audit query` | Query audit log |
+| `spool resolve <tag>` | Fetch spool tag without deploying |
 
-## Build / test
+## Flags / env
+
+| Flag | Env | Default |
+|------|-----|---------|
+| `--addr` | `MUXCORE_GRPC_ADDR` | `127.0.0.1:9090` |
+| `--insecure` | `MUXCORE_INSECURE_DISABLE_TLS` | off |
+| `--token` | `MUXCORE_TOKEN` / `MUXCORE_ADMIN_TOKEN` | empty |
+| `--timeout` | — | `15s` |
+
+## Develop
 
 ```bash
+export PATH="$HOME/.local/go/bin:$PATH"
 export GOPRIVATE=github.com/Muxcore-Media/*
-go test ./...
-go build -o muxcorectl ./cmd/muxcorectl
 
-# optional live check against local muxcored
-MUXCORE_INTEGRATION=1 MUXCORE_INSECURE_DISABLE_TLS=true go test ./internal/connect -run Integration -v
+go test ./...
+go build -o bin/muxcorectl ./cmd/muxcorectl
+```
+
+Integration dial (optional, needs a running muxcored):
+
+```bash
+MUXCORE_INTEGRATION=1 MUXCORE_INSECURE_DISABLE_TLS=true go test ./internal/connect -count=1 -v
 ```
 
 ## License
