@@ -1,0 +1,40 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+env:
+  GOPRIVATE: github.com/Muxcore-Media/*
+
+jobs:
+  goreleaser:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26"
+          cache: true
+      - name: Configure private modules (HTTPS)
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.MUXCORE_CI_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - name: Build release binaries
+        run: |
+          mkdir -p dist
+          ver="${GITHUB_REF_NAME}"
+          ldflags="-s -w -X github.com/Muxcore-Media/muxcorectl-cli/internal/cli.Version=${ver}"
+          for os in linux darwin; do
+            for arch in amd64 arm64; do
+              GOOS="$os" GOARCH="$arch" CGO_ENABLED=0 \
+                go build -ldflags="$ldflags" \
+                -o "dist/muxcorectl-${ver}-${os}-${arch}" ./cmd/muxcorectl
+            done
+          done
+          (cd dist && sha256sum muxcorectl-* > muxcorectl_${ver}_checksums.txt)
+      - name: Create release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: dist/*
+          generate_release_notes: true

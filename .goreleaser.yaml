@@ -1,0 +1,38 @@
+version: 2
+
+project_name: muxcorectl
+
+builds:
+  - id: muxcorectl
+    main: ./cmd/muxcorectl
+    binary: muxcorectl
+    ldflags:
+      - -s -w
+      - -X github.com/Muxcore-Media/muxcorectl-cli/internal/cli.Version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: binary
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+release:
+  github:
+    owner: Muxcore-Media
+    name: muxcorectl-cli
+  draft: false
+  prerelease: auto
