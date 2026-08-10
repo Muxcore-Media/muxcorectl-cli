@@ -39,6 +39,15 @@ Equivalent flags (override env):
 muxcorectl --insecure --addr 127.0.0.1:9090 modules list
 ```
 
+RPCs outside the public discovery allowlist (`storage`, `audit`, `spool`) need a bearer token from `auth-local`:
+
+```bash
+export MUXCORE_TOKEN="$(cat ../_mvp/run/admin.token)"   # path may vary
+muxcorectl --insecure storage ls
+muxcorectl --insecure audit query --max 20
+muxcorectl --insecure spool resolve media
+```
+
 ## Commands
 
 | Command | Description |
