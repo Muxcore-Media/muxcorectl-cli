@@ -42,6 +42,7 @@ func NewRoot() *cobra.Command {
 	root.AddCommand(newStorageCmd())
 	root.AddCommand(newAuditCmd())
 	root.AddCommand(newSpoolCmd())
+	root.AddCommand(newSchedulesCmd())
 
 	return root
 }
