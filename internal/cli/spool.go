@@ -14,8 +14,9 @@ import (
 
 func newSpoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "spool",
-		Short: "Spool / tag commands",
+		Use:     "spool",
+		Short:   "Spool / tag commands",
+		GroupID: groupOverview,
 	}
 
 	var spoolURL string

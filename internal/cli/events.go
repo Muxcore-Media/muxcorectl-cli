@@ -14,8 +14,9 @@ import (
 
 func newEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "events",
-		Short: "Event bus commands",
+		Use:     "events",
+		Short:   "Event bus commands",
+		GroupID: groupMonitoring,
 	}
 
 	var eventType string
@@ -66,5 +67,75 @@ func newEventsCmd() *cobra.Command {
 	tail.Flags().StringVar(&eventType, "type", "*", "event type filter")
 	tail.Flags().IntVar(&maxEvents, "max", 0, "stop after N events (0 = unlimited)")
 	cmd.AddCommand(tail)
+	cmd.AddCommand(newEventsStatsCmd())
+	return cmd
+}
+
+func newEventsStatsCmd() *cobra.Command {
+	var maxEvents int
+	var sampleSeconds int
+	cmd := &cobra.Command{
+		Use:   "stats",
+		Short: "Sample recent event type counts (admin-ui /events/stats approximation)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if sampleSeconds < 1 {
+				sampleSeconds = 3
+			}
+			if maxEvents < 1 {
+				maxEvents = 500
+			}
+			opts := dialOpts()
+			c, err := connect.Dial(opts)
+			if err != nil {
+				return err
+			}
+			defer c.Close()
+
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(sampleSeconds)*time.Second)
+			defer cancel()
+
+			ch, cancelSub, err := c.Events.Subscribe(ctx, "*")
+			if err != nil {
+				return fmt.Errorf("events stats: %w", err)
+			}
+			defer cancelSub()
+
+			counts := map[string]int{}
+			total := 0
+			for {
+				select {
+				case <-ctx.Done():
+					if flagJSON {
+						type row struct {
+							Type  string `json:"type"`
+							Count int    `json:"count"`
+						}
+						var out []row
+						for typ, n := range counts {
+							out = append(out, row{Type: typ, Count: n})
+						}
+						return printJSON(map[string]any{"sample_seconds": sampleSeconds, "total": total, "types": out})
+					}
+					rows := make([][]string, 0, len(counts))
+					for typ, n := range counts {
+						rows = append(rows, []string{typ, fmt.Sprintf("%d", n)})
+					}
+					fmt.Printf("sample_seconds=%d total=%d\n", sampleSeconds, total)
+					return printTable([]string{"TYPE", "COUNT"}, rows)
+				case ev, ok := <-ch:
+					if !ok {
+						return nil
+					}
+					counts[ev.GetType()]++
+					total++
+					if total >= maxEvents {
+						cancel()
+					}
+				}
+			}
+		},
+	}
+	cmd.Flags().IntVar(&sampleSeconds, "seconds", 3, "sample duration")
+	cmd.Flags().IntVar(&maxEvents, "max", 500, "max events to count")
 	return cmd
 }

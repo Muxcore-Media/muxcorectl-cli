@@ -1,8 +1,8 @@
 # muxcorectl
 
-Operator CLI for a running MuxCore (`muxcored`) node. Clean rewrite — do **not** confuse with the archived `muxcorectl` dump.
+Admin and operator CLI for a running MuxCore (`muxcored`) node. Mirrors the **admin-ui** web dashboard from the terminal — approachable for CLI newcomers, with `--json` and scripting flags for veterans.
 
-Talks to muxcored over gRPC (core SDK client). For laptop / fixture stacks, dial with insecure-dev TLS disabled.
+Talks to muxcored over gRPC (core SDK client) and discovers module HTTP/gRPC endpoints the same way admin-ui does.
 
 ## Install
 
@@ -13,72 +13,170 @@ go install github.com/Muxcore-Media/muxcorectl-cli/cmd/muxcorectl@latest
 Or build from this repo:
 
 ```bash
+export PATH="$HOME/.local/go/bin:$PATH"
+export GOPRIVATE=github.com/Muxcore-Media/*
 go build -o bin/muxcorectl ./cmd/muxcorectl
 ```
 
-Requires Go 1.26+ and access to `github.com/Muxcore-Media/core` (`GOPRIVATE=github.com/Muxcore-Media/*` for private modules).
+Requires Go 1.26+.
 
-## Laptop usage
-
-Against a local host stack (`_mvp` / `muxcore-installer`) listening on `127.0.0.1:9090`:
+## Quick start (local laptop stack)
 
 ```bash
 export MUXCORE_INSECURE_DISABLE_TLS=true
-# optional: export MUXCORE_GRPC_ADDR=127.0.0.1:9090
-# optional: export MUXCORE_TOKEN=…   # or MUXCORE_ADMIN_TOKEN
-
-muxcorectl version
-muxcorectl modules list
-muxcorectl modules status
-muxcorectl cluster status
-```
-
-Equivalent flags (override env):
-
-```bash
-muxcorectl --insecure --addr 127.0.0.1:9090 modules list
-```
-
-RPCs outside the public discovery allowlist (`storage`, `audit`, `spool`) need a bearer token from `auth-local`:
-
-```bash
+export MUXCORE_MESH_DIAL_LOCAL=true
 export MUXCORE_TOKEN="$(cat ../_mvp/run/admin.token)"   # path may vary
-muxcorectl --insecure storage ls
-muxcorectl --insecure audit query --max 20
-muxcorectl --insecure spool resolve media
-muxcorectl --insecure schedules list
-muxcorectl --insecure schedules add --name hourly-ping --cron '@hourly' --webhook http://127.0.0.1:9999/hook
+
+muxcorectl --help
+muxcorectl health status
+muxcorectl modules list
+muxcorectl settings list
+muxcorectl media libraries
+muxcorectl users list
 ```
 
-Override discovery when needed:
+## Global flags
 
-```bash
-muxcorectl schedules list --scheduler-url http://127.0.0.1:9200
-# or: export SCHEDULER_URL=http://127.0.0.1:9200
-```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `version` | Print CLI version |
-| `modules list` | List modules (`Discovery.ListAll`) |
-| `modules status [id]` | One module or all |
-| `cluster status` | Members + leader |
-| `events tail` | Subscribe to events (`--type`, `--max`) |
-| `storage ls [prefix]` | List storage keys |
-| `audit query` | Query audit log |
-| `spool resolve <tag>` | Fetch spool tag without deploying |
-| `schedules list` / `status` / `add` / `cancel` | Manage `scheduler-cron` via its HTTP API (`--scheduler-url` / `SCHEDULER_URL`, or discover `HttpAddr`) |
-
-## Flags / env
-
-| Flag | Env | Default |
+| Flag | Env | Purpose |
 |------|-----|---------|
-| `--addr` | `MUXCORE_GRPC_ADDR` | `127.0.0.1:9090` |
-| `--insecure` | `MUXCORE_INSECURE_DISABLE_TLS` | off |
-| `--token` | `MUXCORE_TOKEN` / `MUXCORE_ADMIN_TOKEN` | empty |
-| `--timeout` | — | `15s` |
+| `--addr` | `MUXCORE_GRPC_ADDR` | muxcored gRPC address (default `127.0.0.1:9090`) |
+| `--insecure` | `MUXCORE_INSECURE_DISABLE_TLS` | Disable TLS for local dev |
+| `--token` | `MUXCORE_TOKEN` / `MUXCORE_ADMIN_TOKEN` | Bearer token for protected RPCs |
+| `--timeout` | — | Per-RPC timeout (default `15s`) |
+| `--json` | — | Machine-readable JSON output |
+| `--quiet` | — | Suppress success messages |
+| `--yes` | — | Skip confirmation prompts |
+
+Optional module URL overrides (when discovery is unavailable):
+
+| Env | Module |
+|-----|--------|
+| `MUXCORE_AUTH_URL` | auth-local HTTP base |
+| `MUXCORE_REQUEST_URL` | request-media HTTP base |
+| `MUXCORE_PLAYBACK_MONITOR_URL` | playback-monitor HTTP base |
+| `ADMIN_UI_PARENTAL_FILE` | Per-user parental controls JSON |
+| `ADMIN_UI_BRANDING_FILE` | Branding settings file |
+| `ADMIN_UI_NETWORKING_FILE` | Published URL / proxy settings |
+
+## admin-ui parity
+
+**216 HTTP routes** in `admin-ui/handler/handler.go` are mapped in `parity_routes_test.go`. CI verifies every route has a CLI equivalent or is documented as browser-only.
+
+### Intentionally browser-only (no CLI equivalent)
+
+| admin-ui | Reason |
+|----------|--------|
+| `/login`, `/logout` | Browser cookie session |
+| Passkey **registration** | WebAuthn ceremony |
+| `/auth/callback`, `/auth/status` | SSO redirect flow |
+| `/branding.css` | Static asset |
+| `POST /devices/{token}/revoke` | Revokes in-memory admin-ui session only |
+
+For `/devices`, run `muxcorectl devices` for guidance; use `users tokens`, `keys list`, or `audit query` for related admin tasks.
+
+### Command groups (admin-ui parity)
+
+### Overview
+| Command | admin-ui | Description |
+|---------|----------|-------------|
+| `health status` | Dashboard | Cluster leader, nodes, library count |
+| `modules list` / `status` | Modules | Registered modules |
+| `cluster status` | Cluster | Cluster membership |
+| `lifecycle list` / `stop` / `restart` / `spawn` | Modules | Module lifecycle control |
+| `marketplace spools` / `tags` / `deploy` | Marketplace | Spool browse and tag deploy |
+| `spool resolve <tag>` | Marketplace | Inspect tag without deploying |
+
+### Monitoring
+| Command | admin-ui | Description |
+|---------|----------|-------------|
+| `events tail` / `stats` | Events | Stream or sample event bus |
+| `health monitor` | Dashboard monitor | Health grid summary |
+| `audit query` / `export` | Audit | Query or export audit log |
+| `activity` | Activity | Cross-library grab/import activity |
+| `logs list` / `tail` | Logs | Module log files |
+
+### Library
+| Command | admin-ui | Description |
+|---------|----------|-------------|
+| `metadata` | Metadata manager | List media library modules |
+| `media libraries` / `items` / `get` / `missing` / `metadata` / `collections` / `tags` / `monitor` / `dispatch` / `refresh` / `delete` / `artwork` / `titles` | Media | Full library admin |
+| `formats list` / `get` / `create` / `update` / `profiles` / `release-profiles` | Formats | Custom formats and profiles |
+| `roots list` / `create` / `update` / `browse` / `delete` | Root Folders | Library roots |
+| `rename templates` / `organize` | Naming | Naming templates and organize |
+
+### Automation
+| Command | admin-ui | Description |
+|---------|----------|-------------|
+| `request list` / `search` / `add` / `approve` / `deny` | Request | TMDB search and requests |
+| `queue list` / `history` / `remove` / `retry-import` / `blocklist` | Queue | Wanted queue and import history |
+| `automation search` / `dispatch` | Automation | Indexer search and grab dispatch |
+| `calendar list` | Calendar | TV air-date calendar |
+| `subtitles wanted` / `sync` / `profiles` / `media` / `mass-edit` | Subtitles | Subtitle management |
+| `maintainer rules` / `candidates` / `scan` / `act` / `exclusions` | Maintainer | Library cleanup rules |
+| `list-sync sources` / `sync` / `history` / `items` | List Sync | Trakt/list sync |
+| `import candidates` / `path` | Import | Manual disk import |
+| `migrate` | Migrate | Radarr/Sonarr library import |
+| `schedules list` / `add` / … | Tasks | scheduler-cron HTTP API |
+| `tasks list` / `cancel` | Tasks | Same as schedules (admin-ui naming) |
+
+### Playback
+| Command | admin-ui | Description |
+|---------|----------|-------------|
+| `jellyfin status` / `sync` / `refresh` | Jellyfin | Jellyfin bridge admin |
+| `streams active` / `history` / `stats` / `users` / `libraries` / `servers` / `map` / `events` | Streams | Playback sessions and analytics |
+| `streams guard` / `notifications` | Streams guard / notifications | playback-guard gRPC + monitor HTTP |
+| `transcode profiles` / `setups` / `runs` / `approve` / `reject` / `apply-template` | Transcode | Transcode pipeline admin |
+| `playback show` / `set` | Playback | Local playback policy JSON |
+| `livetv show` / `set` | Live TV | Live TV guide settings |
+
+### Access
+| Command | admin-ui | Description |
+|---------|----------|-------------|
+| `users list` / `create` / `password` / `roles` / `totp` / `tokens` / `passkeys` / `parental` | Users | Local auth users |
+| `devices` | Devices | Explains browser-session limitation |
+| `keys list` / `revoke` | API Keys | Cross-user token catalog |
+| `invites list` / `create` / `revoke` | Invites | Signup invite links |
+| `auth` | Auth / SSO | Auth module overview |
+
+### System
+| Command | admin-ui | Description |
+|---------|----------|-------------|
+| `settings list` / `get` / `set` | Settings | Module settings via mesh |
+| `storage ls` | Storage | Storage key listing |
+| `backups list` / `create` / `delete` / `restore` | Backups | Backup archives |
+| `config` | Config | MUXCORE_/ADMIN_UI_ environment |
+| `plugins` | Plugins | Registered modules by capability |
+| `branding show` / `set` | Branding | Admin UI branding file |
+| `networking show` / `set` | Networking | Published URLs and proxies |
+
+## Examples
+
+**Settings (beginner-friendly tables):**
+```bash
+muxcorectl settings list
+muxcorectl settings get auth-local session_timeout
+muxcorectl settings set metadata-tmdb api_key "your-key"
+```
+
+**Media library:**
+```bash
+muxcorectl media libraries
+muxcorectl media items media-movies --search "inception"
+muxcorectl media missing media-tvshows
+muxcorectl media refresh media-movies 42
+```
+
+**Scripting with JSON:**
+```bash
+muxcorectl --json users list | jq '.[].username'
+muxcorectl --json --yes marketplace deploy media
+```
+
+**Destructive actions (prompts unless `--yes`):**
+```bash
+muxcorectl media delete media-movies 42 --delete-files   # prompts
+muxcorectl --yes lifecycle stop media-scanner            # no prompt
+```
 
 ## Develop
 
@@ -87,6 +185,10 @@ export PATH="$HOME/.local/go/bin:$PATH"
 export GOPRIVATE=github.com/Muxcore-Media/*
 
 go test ./...
+# Verify all 216 admin-ui routes are mapped:
+go test ./internal/cli -run TestAdminUIRoutesMatchHandler -v
+# Live smoke (muxcored running):
+MUXCORE_LIVE_TEST=1 MUXCORE_TOKEN=... go test ./internal/cli -run TestLiveSmoke -v
 go build -o bin/muxcorectl ./cmd/muxcorectl
 ```
 

@@ -1,0 +1,61 @@
+package cli
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/spf13/cobra"
+)
+
+func healthMonitorURL() string {
+	if v := strings.TrimRight(envOr("ADMIN_UI_HEALTH_MONITOR_URL", "http://127.0.0.1:9203"), "/"); v != "" {
+		return v
+	}
+	return "http://127.0.0.1:9203"
+}
+
+func newHealthMonitorCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "monitor",
+		Short: "Fetch health monitor summary (admin-ui /dashboard/monitor parity)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			base := healthMonitorURL()
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+"/status", nil)
+			if err != nil {
+				return err
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return fmt.Errorf("health monitor: %w", err)
+			}
+			defer resp.Body.Close()
+			body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+			if err != nil {
+				return err
+			}
+			if resp.StatusCode != http.StatusOK {
+				return fmt.Errorf("health monitor HTTP %s: %s", resp.Status, strings.TrimSpace(string(body)))
+			}
+			var st map[string]any
+			if err := json.Unmarshal(body, &st); err != nil {
+				return fmt.Errorf("health monitor JSON: %w", err)
+			}
+			if flagJSON {
+				return printJSON(st)
+			}
+			fmt.Printf("status:       %v\n", st["status"])
+			fmt.Printf("modules:      %v\n", st["module_count"])
+			fmt.Printf("stale:        %v\n", st["stale_count"])
+			fmt.Printf("degraded:     %v\n", st["degraded_transitions"])
+			fmt.Printf("events_pub:   %v\n", st["events_published"])
+			return nil
+		},
+	}
+}
