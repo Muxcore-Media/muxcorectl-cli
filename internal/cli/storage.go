@@ -11,8 +11,9 @@ import (
 
 func newStorageCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "storage",
-		Short: "Storage commands",
+		Use:     "storage",
+		Short:   "Storage commands",
+		GroupID: groupSystem,
 	}
 	cmd.AddCommand(&cobra.Command{
 		Use:   "ls [prefix]",

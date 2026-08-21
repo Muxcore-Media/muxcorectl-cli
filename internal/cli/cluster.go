@@ -12,8 +12,9 @@ import (
 
 func newClusterCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cluster",
-		Short: "Cluster membership commands",
+		Use:     "cluster",
+		Short:   "Cluster membership commands",
+		GroupID: groupOverview,
 	}
 	cmd.AddCommand(&cobra.Command{
 		Use:   "status",

@@ -12,8 +12,9 @@ import (
 
 func newModulesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "modules",
-		Short: "Inspect registered modules on muxcored",
+		Use:     "modules",
+		Short:   "Inspect registered modules on muxcored",
+		GroupID: groupOverview,
 	}
 	cmd.AddCommand(newModulesListCmd())
 	cmd.AddCommand(newModulesStatusCmd())

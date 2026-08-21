@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -18,8 +17,9 @@ import (
 
 func newSchedulesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "schedules",
-		Short: "Manage scheduler-cron tasks via its HTTP API",
+		Use:     "schedules",
+		Short:   "Manage scheduler-cron tasks via its HTTP API",
+		GroupID: groupAutomation,
 	}
 	cmd.PersistentFlags().String("scheduler-url", "", "scheduler-cron base URL (default: discover HttpAddr)")
 	cmd.AddCommand(newSchedulesListCmd())
@@ -225,28 +225,6 @@ func resolveSchedulerURL(cmd *cobra.Command) (string, error) {
 	return addr, nil
 }
 
-func normalizeHTTPBase(httpAddr string) string {
-	httpAddr = strings.TrimSpace(httpAddr)
-	if httpAddr == "" {
-		return ""
-	}
-	if strings.HasPrefix(httpAddr, "http://") || strings.HasPrefix(httpAddr, "https://") {
-		return strings.TrimRight(httpAddr, "/")
-	}
-	host, port, err := net.SplitHostPort(httpAddr)
-	if err != nil {
-		if strings.HasPrefix(httpAddr, ":") {
-			port = strings.TrimPrefix(httpAddr, ":")
-			host = ""
-		} else {
-			return "http://" + strings.TrimRight(httpAddr, "/")
-		}
-	}
-	if host == "" || host == "0.0.0.0" || host == "::" {
-		host = "127.0.0.1"
-	}
-	return "http://" + net.JoinHostPort(host, port)
-}
 
 func schedulerDo(method, url string, body []byte) ([]byte, error) {
 	opts := dialOpts()
