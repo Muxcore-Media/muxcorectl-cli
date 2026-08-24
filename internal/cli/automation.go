@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	automationv1 "github.com/Muxcore-Media/media-automation/proto/automationv1"
+	automationv1 "github.com/Muxcore-Media/contracts-automation/muxcore/automation/v1"
 	"github.com/spf13/cobra"
 )
 
