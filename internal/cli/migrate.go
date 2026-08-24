@@ -42,8 +42,10 @@ func newMigrateCmd() *cobra.Command {
 				items, err = cli.FetchRadarr(ctx, baseURL, apiKey)
 			case "sonarr":
 				items, err = cli.FetchSonarr(ctx, baseURL, apiKey)
+			case "lidarr":
+				items, err = cli.FetchLidarr(ctx, baseURL, apiKey)
 			default:
-				return fmt.Errorf("service must be radarr or sonarr")
+				return fmt.Errorf("service must be radarr, sonarr, or lidarr")
 			}
 			if err != nil {
 				return fmt.Errorf("migrate fetch: %w", err)
@@ -55,7 +57,7 @@ func newMigrateCmd() *cobra.Command {
 			if closer != nil {
 				defer closer()
 			}
-			res := arrmigrate.Run(ctx, items, dryRun, movies, tv, resolveProfileByName)
+			res := arrmigrate.Run(ctx, items, dryRun, movies, tv, nil, resolveProfileByName)
 			if flagJSON {
 				return printJSON(res)
 			}
@@ -71,7 +73,7 @@ func newMigrateCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&service, "service", "radarr", "radarr or sonarr")
+	cmd.Flags().StringVar(&service, "service", "radarr", "radarr, sonarr, or lidarr")
 	cmd.Flags().StringVar(&baseURL, "url", "", "Arr base URL")
 	cmd.Flags().StringVar(&apiKey, "api-key", "", "Arr API key")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", true, "preview without importing")

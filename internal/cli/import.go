@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	scannerv1 "github.com/Muxcore-Media/media-scanner/proto/scannerv1"
+	scannerv1 "github.com/Muxcore-Media/contracts-scanner/muxcore/scanner/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )

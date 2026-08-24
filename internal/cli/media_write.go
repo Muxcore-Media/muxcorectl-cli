@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	mediaadminv1 "github.com/Muxcore-Media/contracts-media-admin/gen/muxcore/media/admin/v1"
-	automationv1 "github.com/Muxcore-Media/media-automation/proto/automationv1"
+	automationv1 "github.com/Muxcore-Media/contracts-automation/muxcore/automation/v1"
 	mgmntv1 "github.com/Muxcore-Media/media-movies/proto/mgmntv1"
 	tvmgmtv1 "github.com/Muxcore-Media/media-tvshows/proto/tvmgmtv1"
 	"github.com/Muxcore-Media/core/sdk/go/client"
