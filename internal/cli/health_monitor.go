@@ -27,7 +27,7 @@ func newHealthMonitorCmd() *cobra.Command {
 			base := healthMonitorURL()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+"/status", nil)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, base+"/status", http.NoBody)
 			if err != nil {
 				return err
 			}
@@ -35,7 +35,7 @@ func newHealthMonitorCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("health monitor: %w", err)
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 			body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 			if err != nil {
 				return err

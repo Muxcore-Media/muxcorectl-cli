@@ -25,7 +25,7 @@ func newClusterCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
@@ -38,9 +38,9 @@ func newClusterCmd() *cobra.Command {
 			fmt.Printf("leader: %s\n", leader)
 			fmt.Printf("members: %d\n", len(members))
 			w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-			fmt.Fprintln(w, "ID\tGRPC\tHTTP\tMODULES")
+			_, _ = fmt.Fprintln(w, "ID\tGRPC\tHTTP\tMODULES")
 			for _, m := range members {
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
 					m.GetId(), m.GetGrpcAddr(), m.GetHttpAddr(), strings.Join(m.GetModules(), ","))
 			}
 			return w.Flush()

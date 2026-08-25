@@ -30,7 +30,7 @@ func newSpoolCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer conn.Close()
+			defer func() { _ = conn.Close() }()
 
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
@@ -53,7 +53,7 @@ func newSpoolCmd() *cobra.Command {
 			fmt.Printf("spool_url:   %s\n", resp.GetSpoolUrl())
 			fmt.Printf("modules:     %d\n", len(resp.GetModules()))
 			for _, m := range resp.GetModules() {
-				fmt.Fprintf(os.Stdout, "  - %s@%s required=%v instance=%s\n",
+				_, _ = fmt.Fprintf(os.Stdout, "  - %s@%s required=%v instance=%s\n",
 					m.GetRepo(), m.GetVersion(), m.GetRequired(), m.GetInstanceId())
 			}
 			return nil

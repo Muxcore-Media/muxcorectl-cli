@@ -136,7 +136,7 @@ func newListSyncDeleteCmd() *cobra.Command {
 func newListSyncAddCmd() *cobra.Command {
 	var (
 		srcType, listURL, username, clientID string
-		interval                                   int32
+		interval                             int32
 	)
 	cmd := &cobra.Command{
 		Use:   "add <name>",

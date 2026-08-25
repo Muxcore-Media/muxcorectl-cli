@@ -40,7 +40,7 @@ func withAuth(fn func(ctx context.Context, auth authv1.AuthServiceClient) error)
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 		return fn(ctx, authv1.NewAuthServiceClient(conn))
 	})
 }

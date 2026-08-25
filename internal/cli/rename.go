@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	renamev1 "github.com/Muxcore-Media/media-rename/proto/renamev1"
 	"github.com/Muxcore-Media/core/sdk/go/client"
+	renamev1 "github.com/Muxcore-Media/media-rename/proto/renamev1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -198,7 +198,7 @@ func withRenameClient(fn func(context.Context, renamev1.RenameServiceClient) err
 		if err != nil {
 			return fmt.Errorf("dial rename: %w", err)
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 		return fn(ctx, renamev1.NewRenameServiceClient(conn))
 	})
 }

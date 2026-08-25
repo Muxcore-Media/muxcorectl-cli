@@ -284,7 +284,7 @@ func withMediaClient(moduleID string, fn func(context.Context, mediaadminv1.Medi
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 		return fn(ctx, mediaadminv1.NewMediaAdminServiceClient(conn))
 	})
 }

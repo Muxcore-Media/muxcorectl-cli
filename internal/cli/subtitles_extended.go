@@ -252,7 +252,7 @@ Pass media ids with repeated --id flags.`,
 					}
 				case "search":
 					resp, err := cli.SearchWanted(ctx, &subtv1.SearchWantedRequest{
-						MediaIds: ids, Limit: int32(len(ids) * 4),
+						MediaIds: ids, Limit: int32(len(ids) * 4), //nolint:gosec // subtitle batch size bounded by operator selection
 					})
 					if err != nil {
 						return fmt.Errorf("subtitles mass-edit search: %w", err)

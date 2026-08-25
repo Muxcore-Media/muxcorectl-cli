@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	mediaadminv1 "github.com/Muxcore-Media/contracts-media-admin/gen/muxcore/media/admin/v1"
 	automationv1 "github.com/Muxcore-Media/contracts-automation/muxcore/automation/v1"
+	mediaadminv1 "github.com/Muxcore-Media/contracts-media-admin/gen/muxcore/media/admin/v1"
+	"github.com/Muxcore-Media/core/sdk/go/client"
 	mgmntv1 "github.com/Muxcore-Media/media-movies/proto/mgmntv1"
 	tvmgmtv1 "github.com/Muxcore-Media/media-tvshows/proto/tvmgmtv1"
-	"github.com/Muxcore-Media/core/sdk/go/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -195,7 +195,7 @@ func dialModuleByID(moduleID string, fn func(context.Context, *grpc.ClientConn) 
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 		return fn(ctx, conn)
 	})
 }
@@ -218,7 +218,7 @@ func itemTMDBID(item *mediaadminv1.MediaItem) int32 {
 	}
 	if v := item.GetMetadata()["tmdb_id"]; v != "" {
 		id, _ := strconv.Atoi(v)
-		return int32(id)
+		return int32(id) //nolint:gosec // admin TMDB ids are bounded catalog values
 	}
 	return 0
 }
@@ -245,8 +245,8 @@ func newMediaDispatchCmd() *cobra.Command {
 				it := got.GetItem()
 				title := it.GetTitle()
 				tmdbID := itemTMDBID(it)
-				year := int32(it.GetYear())
-				return withAutomationClient(func(ctx context.Context, autoCli automationv1.AutomationServiceClient) error {
+				year := int32(it.GetYear())                                                                                 //nolint:gosec // media year fits int32
+				return withAutomationClient(func(ctx context.Context, autoCli automationv1.AutomationServiceClient) error { //nolint:contextcheck // automation dials independent module conn
 					req := &automationv1.DispatchRequest{
 						ItemId: itemID, ItemType: itemType, Title: title, TmdbId: tmdbID,
 					}
@@ -295,7 +295,7 @@ func newMediaCollectionsSyncCmd() *cobra.Command {
 			}
 			return withMovieClient(args[0], func(ctx context.Context, cli mgmntv1.MovieManagementServiceClient) error {
 				resp, err := cli.SyncCollection(ctx, &mgmntv1.SyncCollectionRequest{
-					CollectionId: int32(id), AddMissing: addMissing,
+					CollectionId: int32(id), AddMissing: addMissing, //nolint:gosec // validated positive collection id
 				})
 				if err != nil {
 					return fmt.Errorf("collection sync: %w", err)
@@ -327,7 +327,7 @@ func newMediaCollectionsMonitorCmd() *cobra.Command {
 			}
 			return withMovieClient(args[0], func(ctx context.Context, cli mgmntv1.MovieManagementServiceClient) error {
 				_, err := cli.SetCollectionMonitored(ctx, &mgmntv1.SetCollectionMonitoredRequest{
-					CollectionId: int32(id), Monitored: monitored, SearchOnAdd: true,
+					CollectionId: int32(id), Monitored: monitored, SearchOnAdd: true, //nolint:gosec // validated positive collection id
 				})
 				if err != nil {
 					return fmt.Errorf("collection monitor: %w", err)
@@ -441,7 +441,7 @@ func newMediaTitlesAddCmd() *cobra.Command {
 				kind := automationItemType(moduleID, displayName)
 				switch kind {
 				case "movie":
-					return withMovieClient(moduleID, func(ctx context.Context, cli mgmntv1.MovieManagementServiceClient) error {
+					return withMovieClient(moduleID, func(ctx context.Context, cli mgmntv1.MovieManagementServiceClient) error { //nolint:contextcheck // movie module dials independent conn
 						resp, err := cli.AddAlternateTitle(ctx, &mgmntv1.AddAlternateTitleRequest{MovieId: itemID, Title: title})
 						if err != nil {
 							return fmt.Errorf("media title add: %w", err)
@@ -455,7 +455,7 @@ func newMediaTitlesAddCmd() *cobra.Command {
 						return nil
 					})
 				case "tv":
-					return withTVClient(moduleID, func(ctx context.Context, cli tvmgmtv1.TvManagementServiceClient) error {
+					return withTVClient(moduleID, func(ctx context.Context, cli tvmgmtv1.TvManagementServiceClient) error { //nolint:contextcheck // TV module dials independent conn
 						resp, err := cli.AddAlternateTitle(ctx, &tvmgmtv1.AddAlternateTitleRequest{SeriesId: itemID, Title: title})
 						if err != nil {
 							return fmt.Errorf("media title add: %w", err)
@@ -492,7 +492,7 @@ func newMediaTitlesDeleteCmd() *cobra.Command {
 				kind := automationItemType(moduleID, displayName)
 				switch kind {
 				case "movie":
-					return withMovieClient(moduleID, func(ctx context.Context, cli mgmntv1.MovieManagementServiceClient) error {
+					return withMovieClient(moduleID, func(ctx context.Context, cli mgmntv1.MovieManagementServiceClient) error { //nolint:contextcheck // movie module dials independent conn
 						_, err := cli.RemoveAlternateTitle(ctx, &mgmntv1.RemoveAlternateTitleRequest{MovieId: itemID, TitleId: titleID})
 						if err != nil {
 							return fmt.Errorf("media title delete: %w", err)
@@ -503,7 +503,7 @@ func newMediaTitlesDeleteCmd() *cobra.Command {
 						return nil
 					})
 				case "tv":
-					return withTVClient(moduleID, func(ctx context.Context, cli tvmgmtv1.TvManagementServiceClient) error {
+					return withTVClient(moduleID, func(ctx context.Context, cli tvmgmtv1.TvManagementServiceClient) error { //nolint:contextcheck // TV module dials independent conn
 						_, err := cli.RemoveAlternateTitle(ctx, &tvmgmtv1.RemoveAlternateTitleRequest{SeriesId: itemID, TitleId: titleID})
 						if err != nil {
 							return fmt.Errorf("media title delete: %w", err)

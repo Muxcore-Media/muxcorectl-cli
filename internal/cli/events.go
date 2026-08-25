@@ -33,7 +33,7 @@ func newEventsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 			defer stop()
@@ -89,7 +89,7 @@ func newEventsStatsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(sampleSeconds)*time.Second)
 			defer cancel()

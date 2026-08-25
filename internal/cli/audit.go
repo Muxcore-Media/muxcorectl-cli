@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -38,7 +39,7 @@ func newAuditQueryCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
@@ -51,10 +52,10 @@ func newAuditQueryCmd() *cobra.Command {
 				return printJSON(entries)
 			}
 			w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-			fmt.Fprintln(w, "ID\tTIME\tACTOR\tACTION\tRESOURCE\tRESOURCE_ID")
+			_, _ = fmt.Fprintln(w, "ID\tTIME\tACTOR\tACTION\tRESOURCE\tRESOURCE_ID")
 			for _, e := range entries {
 				ts := time.Unix(e.GetTimestamp(), 0).UTC().Format(time.RFC3339)
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
 					e.GetId(), ts, e.GetActor(), e.GetAction(), e.GetResource(), e.GetResourceId())
 			}
 			return w.Flush()
@@ -88,7 +89,7 @@ func newAuditExportCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
 
@@ -101,16 +102,16 @@ func newAuditExportCmd() *cobra.Command {
 			}
 			var w io.Writer = os.Stdout
 			if outFile != "" {
-				f, err := os.Create(outFile)
+				f, err := os.Create(outFile) //nolint:gosec // operator-selected export path
 				if err != nil {
 					return err
 				}
-				defer f.Close()
+				defer func() { _ = f.Close() }()
 				w = f
 			}
 			for {
 				chunk, err := stream.Recv()
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					break
 				}
 				if err != nil {

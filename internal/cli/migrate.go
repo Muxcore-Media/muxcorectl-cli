@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/Muxcore-Media/admin-ui/arrmigrate"
+	"github.com/Muxcore-Media/core/sdk/go/client"
 	formatsv1 "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1"
 	mgmntv1 "github.com/Muxcore-Media/media-movies/proto/mgmntv1"
 	tvmgmtv1 "github.com/Muxcore-Media/media-tvshows/proto/tvmgmtv1"
-	"github.com/Muxcore-Media/core/sdk/go/client"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
 )
@@ -86,7 +86,7 @@ type movieImporter struct {
 
 func (a movieImporter) ImportMovie(ctx context.Context, title string, year, tmdbID int, qualityProfileID, rootFolder string, monitored bool) (string, error) {
 	resp, err := a.client.AddMovie(ctx, &mgmntv1.AddMovieRequest{
-		TmdbId: int32(tmdbID), Title: title, Year: int32(year),
+		TmdbId: int32(tmdbID), Title: title, Year: int32(year), //nolint:gosec // TMDB/year values are bounded catalog ids
 		QualityProfileId: qualityProfileID, RootFolderPath: rootFolder,
 	})
 	if err != nil {
@@ -107,7 +107,7 @@ type tvImporter struct {
 
 func (a tvImporter) ImportSeries(ctx context.Context, title string, year, tmdbID int, qualityProfileID, rootFolder string, monitored bool) (string, error) {
 	resp, err := a.client.AddTVShow(ctx, &tvmgmtv1.AddTVShowRequest{
-		TmdbId: int32(tmdbID), Name: title, Year: int32(year),
+		TmdbId: int32(tmdbID), Name: title, Year: int32(year), //nolint:gosec // TMDB/year values are bounded catalog ids
 		QualityProfileId: qualityProfileID, RootFolderPath: rootFolder,
 	})
 	if err != nil {
@@ -164,7 +164,7 @@ func resolveProfileByName(ctx context.Context, name string) string {
 		return ""
 	}
 	var id string
-	_ = withFormatsClient(func(ctx context.Context, cli formatsv1.FormatServiceClient) error {
+	_ = withFormatsClient(func(ctx context.Context, cli formatsv1.FormatServiceClient) error { //nolint:contextcheck // profile lookup dials formats module independently
 		resp, err := cli.ListProfiles(ctx, &formatsv1.ListProfilesRequest{})
 		if err != nil {
 			return err

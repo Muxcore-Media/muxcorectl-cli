@@ -29,7 +29,7 @@ func newStorageCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
@@ -39,9 +39,9 @@ func newStorageCmd() *cobra.Command {
 				return fmt.Errorf("storage ls: %w", err)
 			}
 			w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-			fmt.Fprintln(w, "KEY\tSIZE\tCONTENT_TYPE\tMODIFIED")
+			_, _ = fmt.Fprintln(w, "KEY\tSIZE\tCONTENT_TYPE\tMODIFIED")
 			for _, o := range objs {
-				fmt.Fprintf(w, "%s\t%d\t%s\t%d\n", o.GetKey(), o.GetSize(), o.GetContentType(), o.GetLastModified())
+				_, _ = fmt.Fprintf(w, "%s\t%d\t%s\t%d\n", o.GetKey(), o.GetSize(), o.GetContentType(), o.GetLastModified())
 			}
 			return w.Flush()
 		},

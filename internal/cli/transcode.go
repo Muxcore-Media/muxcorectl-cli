@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	transcodev1 "github.com/Muxcore-Media/media-transcoder/proto/transcodev1"
 	"github.com/Muxcore-Media/core/sdk/go/client"
+	transcodev1 "github.com/Muxcore-Media/media-transcoder/proto/transcodev1"
 	"github.com/spf13/cobra"
 )
 
@@ -27,8 +27,10 @@ func withTranscoderClient(fn func(context.Context, transcodev1.TranscodeServiceC
 			if err != nil {
 				return err
 			}
-			defer conn.Close()
-			return fn(ctx, transcodev1.NewTranscodeServiceClient(conn))
+			cli := transcodev1.NewTranscodeServiceClient(conn)
+			err = fn(ctx, cli)
+			_ = conn.Close()
+			return err
 		}
 		if modErr != nil {
 			return modErr

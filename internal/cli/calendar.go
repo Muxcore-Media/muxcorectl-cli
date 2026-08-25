@@ -76,9 +76,9 @@ func newCalendarListCmd() *cobra.Command {
 						out = append(out, row{
 							Module: mod.GetId(), Date: it.GetDate(), Title: it.GetTitle(),
 							Subtitle: it.GetSubtitle(),
-							Season: it.GetMetadata()["season_number"],
-							Episode: it.GetMetadata()["episode_number"],
-							HasFile: it.GetHasFile(), Monitored: it.GetMonitored(),
+							Season:   it.GetMetadata()["season_number"],
+							Episode:  it.GetMetadata()["episode_number"],
+							HasFile:  it.GetHasFile(), Monitored: it.GetMonitored(),
 						})
 					}
 				}
