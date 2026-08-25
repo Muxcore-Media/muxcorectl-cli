@@ -142,6 +142,6 @@ func authHTTPBase() (string, error) {
 	return base, err
 }
 
-func authHTTPDo(method, url string, body []byte, headers map[string]string) ([]byte, error) {
-	return httpDo(method, url, body, headers)
+func authHTTPDo(method, rawURL string, body []byte, headers map[string]string) ([]byte, error) {
+	return httpDo(method, rawURL, body, headers)
 }

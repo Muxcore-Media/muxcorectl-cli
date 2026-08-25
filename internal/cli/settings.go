@@ -19,7 +19,7 @@ const (
 	methodUpdate = "UpdateSetting"
 )
 
-type settingDefJSON struct {
+type settingDefJSON struct { //nolint:govet // fieldalignment: JSON keys match admin-ui settings schema
 	Key         string   `json:"Key"`
 	Label       string   `json:"Label"`
 	Type        string   `json:"Type"`

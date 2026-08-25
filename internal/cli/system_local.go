@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Muxcore-Media/core/sdk/go/client"
 	discoveryv1 "github.com/Muxcore-Media/core/proto/gen/muxcore/discovery/v1"
+	"github.com/Muxcore-Media/core/sdk/go/client"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ func newPlaybackCmd() *cobra.Command {
 	return cmd
 }
 
-type playbackFile struct {
+type playbackFile struct { //nolint:govet // fieldalignment: JSON field order matches playback settings file
 	EnableResume     bool   `json:"enable_resume"`
 	EnableTranscode  bool   `json:"enable_transcode"`
 	PreferDirectPlay bool   `json:"prefer_direct_play"`
@@ -230,7 +230,7 @@ func newLiveTVSetCmd() *cobra.Command {
 			if channelsFile == "" {
 				return fmt.Errorf("--file is required")
 			}
-			raw, err := os.ReadFile(channelsFile)
+			raw, err := os.ReadFile(channelsFile) //nolint:gosec // operator-selected playback channels JSON path
 			if err != nil {
 				return fmt.Errorf("read channels: %w", err)
 			}

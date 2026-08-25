@@ -110,7 +110,7 @@ func newMarketplaceDeployCmd() *cobra.Command {
 			fmt.Printf("tag=%s spawned=%d skipped=%d failed=%d\n",
 				resp.GetTagName(), resp.GetSpawned(), resp.GetSkipped(), resp.GetFailed())
 			for _, r := range resp.GetResults() {
-				fmt.Fprintf(os.Stdout, "  %s spawned=%v already_running=%v error=%q\n",
+				_, _ = fmt.Fprintf(os.Stdout, "  %s spawned=%v already_running=%v error=%q\n",
 					r.GetModuleId(), r.GetSpawned(), r.GetAlreadyRunning(), r.GetError())
 			}
 			return nil

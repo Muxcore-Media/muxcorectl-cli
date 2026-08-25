@@ -35,7 +35,7 @@ func newLifecycleListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer conn.Close()
+			defer func() { _ = conn.Close() }()
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
 			client := lifecyclev1.NewModuleLifecycleServiceClient(conn)
@@ -152,7 +152,7 @@ func lifecycleAction(moduleID string, fn func(context.Context, lifecyclev1.Modul
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	ctx, cancel := connect.Context(opts)
 	defer cancel()
 	client := lifecyclev1.NewModuleLifecycleServiceClient(conn)

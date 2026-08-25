@@ -223,7 +223,7 @@ func newSubtitlesHistoryCmd() *cobra.Command {
 			})
 		},
 	}
-	clear := &cobra.Command{
+	clearCmd := &cobra.Command{
 		Use:   "clear",
 		Short: "Clear subtitle history",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -243,6 +243,6 @@ func newSubtitlesHistoryCmd() *cobra.Command {
 		},
 	}
 	cmd := &cobra.Command{Use: "history", Short: "Subtitle history commands"}
-	cmd.AddCommand(list, clear)
+	cmd.AddCommand(list, clearCmd)
 	return cmd
 }

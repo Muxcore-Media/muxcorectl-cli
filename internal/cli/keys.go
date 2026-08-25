@@ -94,9 +94,9 @@ func newConfigCmd() *cobra.Command {
 		GroupID: groupSystem,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			type entry struct {
-				Key       string `json:"key"`
-				Value     string `json:"value,omitempty"`
-				Redacted  bool   `json:"redacted,omitempty"`
+				Key      string `json:"key"`
+				Value    string `json:"value,omitempty"`
+				Redacted bool   `json:"redacted,omitempty"`
 			}
 			var out []entry
 			for _, env := range os.Environ() {

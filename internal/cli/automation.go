@@ -174,7 +174,7 @@ func newAutomationDelayCmd() *cobra.Command {
 func newAutomationBlocklistCmd() *cobra.Command {
 	var wantedID, guid string
 	var clearAll bool
-	clear := &cobra.Command{
+	clearCmd := &cobra.Command{
 		Use:   "clear",
 		Short: "Clear automation blocklist entries",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -198,10 +198,10 @@ func newAutomationBlocklistCmd() *cobra.Command {
 			})
 		},
 	}
-	clear.Flags().StringVar(&wantedID, "wanted-id", "", "clear entries for wanted item")
-	clear.Flags().StringVar(&guid, "guid", "", "clear entries for release guid")
-	clear.Flags().BoolVar(&clearAll, "all", false, "clear entire blocklist")
+	clearCmd.Flags().StringVar(&wantedID, "wanted-id", "", "clear entries for wanted item")
+	clearCmd.Flags().StringVar(&guid, "guid", "", "clear entries for release guid")
+	clearCmd.Flags().BoolVar(&clearAll, "all", false, "clear entire blocklist")
 	cmd := &cobra.Command{Use: "blocklist", Short: "Automation blocklist commands"}
-	cmd.AddCommand(clear)
+	cmd.AddCommand(clearCmd)
 	return cmd
 }

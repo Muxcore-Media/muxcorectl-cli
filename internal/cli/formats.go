@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	formatsv1 "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1"
 	"github.com/Muxcore-Media/core/sdk/go/client"
+	formatsv1 "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -186,7 +186,7 @@ func newFormatsUpdateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var rules []*formatsv1.FormatRule
 			if rulesFile != "" {
-				raw, err := os.ReadFile(rulesFile)
+				raw, err := os.ReadFile(rulesFile) //nolint:gosec // operator-selected rules JSON path
 				if err != nil {
 					return err
 				}
@@ -418,7 +418,7 @@ func withFormatsClient(fn func(context.Context, formatsv1.FormatServiceClient) e
 		if err != nil {
 			return fmt.Errorf("dial formats: %w", err)
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 		return fn(ctx, formatsv1.NewFormatServiceClient(conn))
 	})
 }

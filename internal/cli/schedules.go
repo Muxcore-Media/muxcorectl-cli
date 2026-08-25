@@ -52,9 +52,9 @@ func newSchedulesListCmd() *cobra.Command {
 				return fmt.Errorf("decode list: %w", err)
 			}
 			w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-			fmt.Fprintln(w, "ID\tNAME\tCRON\tSTATUS\tONCE\tLAST_FIRED")
+			_, _ = fmt.Fprintln(w, "ID\tNAME\tCRON\tSTATUS\tONCE\tLAST_FIRED")
 			for _, t := range tasks {
-				fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\t%v\n",
+				_, _ = fmt.Fprintf(w, "%v\t%v\t%v\t%v\t%v\t%v\n",
 					t["id"], t["name"], t["cron_expr"], t["status"], t["once"], t["last_fired_at"])
 			}
 			return w.Flush()
@@ -80,8 +80,8 @@ func newSchedulesStatusCmd() *cobra.Command {
 			}
 			var pretty bytes.Buffer
 			if err := json.Indent(&pretty, body, "", "  "); err != nil {
-				fmt.Println(string(body))
-				return nil
+				_, _ = fmt.Println(string(body))
+				return err
 			}
 			fmt.Println(pretty.String())
 			return nil
@@ -178,7 +178,7 @@ func resolveSchedulerURL(cmd *cobra.Command) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	ctx, cancel := connect.Context(opts)
 	defer cancel()
@@ -225,7 +225,6 @@ func resolveSchedulerURL(cmd *cobra.Command) (string, error) {
 	return addr, nil
 }
 
-
 func schedulerDo(method, url string, body []byte) ([]byte, error) {
 	opts := dialOpts()
 	ctx, cancel := connect.Context(opts)
@@ -246,7 +245,7 @@ func schedulerDo(method, url string, body []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("schedules: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	out, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

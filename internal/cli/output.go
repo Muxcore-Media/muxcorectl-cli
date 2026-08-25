@@ -23,9 +23,9 @@ func printJSON(v any) error {
 
 func printTable(headers []string, rows [][]string) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-	fmt.Fprintln(w, strings.Join(headers, "\t"))
+	_, _ = fmt.Fprintln(w, strings.Join(headers, "\t"))
 	for _, row := range rows {
-		fmt.Fprintln(w, strings.Join(row, "\t"))
+		_, _ = fmt.Fprintln(w, strings.Join(row, "\t"))
 	}
 	return w.Flush()
 }
@@ -46,12 +46,4 @@ func confirmAction(prompt string) error {
 	default:
 		return fmt.Errorf("cancelled")
 	}
-}
-
-func writeJSONFile(path string, v any) error {
-	raw, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, raw, 0o600)
 }

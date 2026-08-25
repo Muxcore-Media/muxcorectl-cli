@@ -14,7 +14,7 @@ import (
 )
 
 // Options control how muxcorectl dials muxcored.
-type Options struct {
+type Options struct { //nolint:govet // fieldalignment: dial options grouped for readability
 	Addr     string
 	Insecure bool
 	Token    string

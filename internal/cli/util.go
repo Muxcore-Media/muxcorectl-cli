@@ -62,11 +62,7 @@ func normalizeHTTPBase(httpAddr string) string {
 		}
 	}
 	if host == "" || host == "0.0.0.0" || host == "::" {
-		if os.Getenv("MUXCORE_MESH_DIAL_LOCAL") == "true" {
-			host = "127.0.0.1"
-		} else {
-			host = "127.0.0.1"
-		}
+		host = "127.0.0.1"
 	}
 	return "http://" + net.JoinHostPort(host, port)
 }
@@ -77,7 +73,7 @@ func withCore(fn func(ctx context.Context, c *client.Client) error) error {
 	if err != nil {
 		return err
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 	ctx, cancel := connect.Context(opts)
 	defer cancel()
 	return fn(ctx, c)
@@ -137,7 +133,7 @@ func meshCall(ctx context.Context, c *client.Client, moduleID, httpAddr, method 
 	if httpAddr != "" {
 		conn, err := dialModuleGRPC(moduleID, httpAddr)
 		if err == nil {
-			defer conn.Close()
+			defer func() { _ = conn.Close() }()
 			mc := meshv1.NewModuleMeshClient(conn)
 			resp, err := mc.Call(ctx, &meshv1.CallRequest{
 				TargetModule: moduleID,
@@ -167,7 +163,7 @@ func withModuleConn(capability string, fn func(ctx context.Context, conn *grpc.C
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 		return fn(ctx, conn)
 	})
 }

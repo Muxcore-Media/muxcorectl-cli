@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type spoolTrustFile struct {
+type spoolTrustFile struct { //nolint:govet // fieldalignment: JSON field order matches persisted trust file
 	RequireSignature  bool                `json:"require_signature"`
 	AllowedPublishers string              `json:"allowed_publishers"`
 	Keys              []spoolTrustKeyMeta `json:"keys"`
@@ -39,9 +39,9 @@ func spoolTrustRoot() string {
 	return filepath.Join(os.TempDir(), "muxcore-spool-trust")
 }
 
-func spoolTrustJSONPath() string  { return filepath.Join(spoolTrustRoot(), "trust.json") }
-func spoolTrustKeysDir() string   { return filepath.Join(spoolTrustRoot(), "keys") }
-func spoolTrustEnvPath() string   { return filepath.Join(spoolTrustRoot(), "spool-trust.env") }
+func spoolTrustJSONPath() string { return filepath.Join(spoolTrustRoot(), "trust.json") }
+func spoolTrustKeysDir() string  { return filepath.Join(spoolTrustRoot(), "keys") }
+func spoolTrustEnvPath() string  { return filepath.Join(spoolTrustRoot(), "spool-trust.env") }
 
 func loadSpoolTrust() spoolTrustFile {
 	raw, err := os.ReadFile(spoolTrustJSONPath())
@@ -204,7 +204,7 @@ func newMarketplaceTrustKeysAddCmd() *cobra.Command {
 			if !strings.HasSuffix(material, "\n") {
 				material += "\n"
 			}
-			if err := os.WriteFile(filepath.Join(spoolTrustKeysDir(), filename), []byte(material), 0o600); err != nil {
+			if err := os.WriteFile(filepath.Join(spoolTrustKeysDir(), filename), []byte(material), 0o600); err != nil { //nolint:gosec // keys stored under controlled spool trust dir
 				return err
 			}
 			t := loadSpoolTrust()

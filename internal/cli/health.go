@@ -31,10 +31,10 @@ func newHealthStatusCmd() *cobra.Command {
 				}
 				libraries, _ := listMediaLibraries(ctx, c)
 				type summary struct {
-					Leader         string `json:"leader"`
-					Nodes          int    `json:"nodes"`
-					Libraries      int    `json:"libraries"`
-					ModulesOnLeader int   `json:"modules_on_leader"`
+					Leader          string `json:"leader"`
+					Nodes           int    `json:"nodes"`
+					Libraries       int    `json:"libraries"`
+					ModulesOnLeader int    `json:"modules_on_leader"`
 				}
 				s := summary{
 					Leader:    leader,

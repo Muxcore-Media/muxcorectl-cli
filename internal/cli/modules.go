@@ -31,7 +31,7 @@ func newModulesListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
@@ -42,7 +42,7 @@ func newModulesListCmd() *cobra.Command {
 			}
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-			fmt.Fprintln(w, "ID\tSTATE\tHEALTH\tNODE\tVERSION\tCAPABILITIES")
+			_, _ = fmt.Fprintln(w, "ID\tSTATE\tHEALTH\tNODE\tVERSION\tCAPABILITIES")
 			for _, e := range resp.GetEntries() {
 				info := e.GetInfo()
 				health := e.GetHealthError()
@@ -58,7 +58,7 @@ func newModulesListCmd() *cobra.Command {
 					id = info.GetId()
 					ver = info.GetVersion()
 				}
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
 					id, e.GetState(), health, e.GetNodeId(), ver, caps)
 			}
 			return w.Flush()
@@ -77,15 +77,15 @@ func newModulesStatusCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer c.Close()
+			defer func() { _ = c.Close() }()
 
 			ctx, cancel := connect.Context(opts)
 			defer cancel()
 
 			if len(args) == 1 {
-				info, err := c.Discovery.Resolve(ctx, args[0])
-				if err != nil {
-					return fmt.Errorf("modules status: %w", err)
+				info, resolveErr := c.Discovery.Resolve(ctx, args[0])
+				if resolveErr != nil {
+					return fmt.Errorf("modules status: %w", resolveErr)
 				}
 				if info == nil {
 					return fmt.Errorf("module %q not found", args[0])
@@ -99,7 +99,7 @@ func newModulesStatusCmd() *cobra.Command {
 				return fmt.Errorf("modules status: %w", err)
 			}
 			w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-			fmt.Fprintln(w, "ID\tSTATE\tHEALTH\tNODE")
+			_, _ = fmt.Fprintln(w, "ID\tSTATE\tHEALTH\tNODE")
 			for _, e := range resp.GetEntries() {
 				info := e.GetInfo()
 				id := ""
@@ -110,7 +110,7 @@ func newModulesStatusCmd() *cobra.Command {
 				if health == "" {
 					health = "ok"
 				}
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", id, e.GetState(), health, e.GetNodeId())
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", id, e.GetState(), health, e.GetNodeId())
 			}
 			return w.Flush()
 		},

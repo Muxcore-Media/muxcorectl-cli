@@ -83,11 +83,11 @@ func newLogsTailCmd() *cobra.Command {
 			}
 			name := filepath.Base(args[0])
 			path := filepath.Join(logDir(), name)
-			f, err := os.Open(path)
+			f, err := os.Open(path) //nolint:gosec // operator-selected log file under MVP log dir
 			if err != nil {
 				return fmt.Errorf("logs tail: %w", err)
 			}
-			defer f.Close()
+			defer func() { _ = f.Close() }()
 			var buf []string
 			sc := bufio.NewScanner(f)
 			for sc.Scan() {

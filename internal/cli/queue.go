@@ -168,7 +168,7 @@ func newQueueBlocklistCmd() *cobra.Command {
 			})
 		},
 	}
-	clear := &cobra.Command{
+	clearCmd := &cobra.Command{
 		Use:   "clear",
 		Short: "Clear the blocklist",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -218,6 +218,6 @@ func newQueueBlocklistCmd() *cobra.Command {
 	add.Flags().String("wanted-id", "", "wanted queue item id")
 	add.Flags().String("reason", "operator", "blocklist reason")
 	cmd := &cobra.Command{Use: "blocklist", Short: "Blocklist commands"}
-	cmd.AddCommand(list, add, clear)
+	cmd.AddCommand(list, add, clearCmd)
 	return cmd
 }

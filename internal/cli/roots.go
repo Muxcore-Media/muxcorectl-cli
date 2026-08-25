@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	rootsv1 "github.com/Muxcore-Media/media-root-folders/proto/rootsv1"
 	"github.com/Muxcore-Media/core/sdk/go/client"
+	rootsv1 "github.com/Muxcore-Media/media-root-folders/proto/rootsv1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -196,7 +196,7 @@ func withRootsClient(fn func(context.Context, rootsv1.RootFolderServiceClient) e
 		if err != nil {
 			return fmt.Errorf("dial roots: %w", err)
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 		return fn(ctx, rootsv1.NewRootFolderServiceClient(conn))
 	})
 }
