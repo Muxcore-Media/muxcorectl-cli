@@ -35,6 +35,42 @@ muxcorectl media libraries
 muxcorectl users list
 ```
 
+## Vault soak stack (homelab)
+
+Mesh gRPC on vault is **local only** (`127.0.0.1:9090`) — run from your workstation via SSH wrapper or copy the binary to vault.
+
+**Wrapper (preferred):**
+
+```bash
+../_mvp/scripts/muxcorectl-vault.sh health status
+../_mvp/scripts/muxcorectl-vault.sh modules list
+../_mvp/scripts/muxcorectl-vault.sh --json settings list
+```
+
+**Deploy updated CLI to vault:**
+
+```bash
+../_mvp/scripts/deploy-module-to-vault.sh muxcorectl --verify-all
+```
+
+**Post-deploy smoke (from umbrella workspace):**
+
+```bash
+../_mvp/scripts/smoke-vault-all.sh
+```
+
+**SSH one-liner** (same env as `muxcorectl-vault.sh`):
+
+```bash
+ssh -6 ender@fd2c:a2fd:5d9e:ab72:9d99:930d:f160:3e95 \
+  'export PATH=/mnt/fast-storage/appdata/muxcore/mvp/bin:$PATH \
+     MUXCORE_INSECURE_DISABLE_TLS=true MUXCORE_MESH_DIAL_LOCAL=true MUXCORE_GRPC_ADDR=127.0.0.1:9090 \
+     MUXCORE_TOKEN=$(cat /mnt/fast-storage/appdata/muxcore/mvp/run/admin.token) \
+     && muxcorectl health status'
+```
+
+Full deploy/smoke reference: workspace [`AGENTS.md`](../AGENTS.md) and [`README-UMBRELLA.md`](../README-UMBRELLA.md).
+
 ## Global flags
 
 | Flag | Env | Purpose |

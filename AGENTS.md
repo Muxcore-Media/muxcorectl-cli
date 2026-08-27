@@ -11,13 +11,20 @@ cd muxcorectl-cli
 go build -o muxcorectl ./cmd/muxcorectl
 ```
 
-Vault smoke:
+Vault smoke (SSH wrapper — mesh is local on vault):
+
+```bash
+../_mvp/scripts/muxcorectl-vault.sh health status
+../_mvp/scripts/smoke-vault-all.sh
+```
+
+Or on vault directly after `deploy-module-to-vault.sh muxcorectl --verify-all`:
 
 ```bash
 export MUXCORE_INSECURE_DISABLE_TLS=true MUXCORE_MESH_DIAL_LOCAL=true
 export MUXCORE_GRPC_ADDR=127.0.0.1:9090
-export MUXCORE_TOKEN="$(cat ../_mvp/run/admin.token)"
-./muxcorectl health status
+export MUXCORE_TOKEN="$(cat /mnt/fast-storage/appdata/muxcore/mvp/run/admin.token)"
+muxcorectl health status
 ```
 
 ## Agent rules
