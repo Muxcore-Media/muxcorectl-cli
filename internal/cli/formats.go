@@ -362,7 +362,7 @@ func newFormatsReleaseProfilesCmd() *cobra.Command {
 			score, _ := cmd.Flags().GetInt32("preferred-score")
 			return withFormatsClient(func(ctx context.Context, cli formatsv1.FormatServiceClient) error {
 				resp, err := cli.UpsertReleaseProfile(ctx, &formatsv1.UpsertReleaseProfileRequest{
-					Name: args[0], Enabled: enabled, PreferredScore: score,
+					Name: args[0], Enabled: &enabled, PreferredScore: score,
 				})
 				if err != nil {
 					return fmt.Errorf("release-profiles create: %w", err)
