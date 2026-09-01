@@ -36,7 +36,7 @@ func spoolTrustRoot() string {
 	if keys := strings.TrimSpace(os.Getenv("MUXCORE_SPOOL_TRUSTED_KEYS_DIR")); keys != "" {
 		return filepath.Dir(keys)
 	}
-	return filepath.Join(os.TempDir(), "muxcore-spool-trust")
+	return filepath.Join(adminDataDir(), "spool-trust")
 }
 
 func spoolTrustJSONPath() string { return filepath.Join(spoolTrustRoot(), "trust.json") }

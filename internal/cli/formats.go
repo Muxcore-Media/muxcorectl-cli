@@ -7,11 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Muxcore-Media/core/sdk/go/client"
 	formatsv1 "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const capMediaFormats = "media.formats"
@@ -406,19 +404,7 @@ func newFormatsReleaseProfilesCmd() *cobra.Command {
 }
 
 func withFormatsClient(fn func(context.Context, formatsv1.FormatServiceClient) error) error {
-	return withCore(func(ctx context.Context, c *client.Client) error {
-		mod, err := findModuleByCapability(ctx, c, capMediaFormats)
-		if err != nil {
-			return err
-		}
-		conn, err := grpc.NewClient(
-			normalizeDialAddr(mod.GetId(), mod.GetHttpAddr()),
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-		)
-		if err != nil {
-			return fmt.Errorf("dial formats: %w", err)
-		}
-		defer func() { _ = conn.Close() }()
+	return withModuleConn(capMediaFormats, func(ctx context.Context, conn *grpc.ClientConn) error {
 		return fn(ctx, formatsv1.NewFormatServiceClient(conn))
 	})
 }

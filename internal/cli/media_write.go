@@ -410,7 +410,7 @@ func newMediaArtworkCmd() *cobra.Command {
 				}
 				rows := make([][]string, 0, len(resp.GetArtwork()))
 				for _, a := range resp.GetArtwork() {
-					rows = append(rows, []string{a.GetType(), a.GetUrl()})
+					rows = append(rows, []string{fmt.Sprint(a.GetType()), a.GetUrl()})
 				}
 				return printTable([]string{"TYPE", "URL"}, rows)
 			})

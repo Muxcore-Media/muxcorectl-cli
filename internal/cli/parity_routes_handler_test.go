@@ -2,38 +2,71 @@ package cli
 
 import (
 	"bufio"
+	_ "embed"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 )
 
+//go:embed testdata/admin_ui_handler_routes.txt
+var embeddedHandlerRoutes string
+
 var handlerRoutePattern = regexp.MustCompile(`mux\.HandleFunc\("((?:GET|POST|DELETE|PUT|PATCH) [^"]+)"`)
 
-// handlerRoutes reads admin-ui/handler/handler.go and returns every registered HTTP route.
-func handlerRoutes(t *testing.T) map[string]struct{} {
-	t.Helper()
-	path := filepath.Join("..", "..", "..", "admin-ui", "handler", "handler.go")
-	f, err := os.Open(path)
-	if err != nil {
-		t.Fatalf("open handler.go: %v", err)
+func handlerGoCandidates() []string {
+	return []string{
+		filepath.Join("..", "..", "admin-ui", "handler", "handler.go"),
+		filepath.Join("..", "..", "..", "admin-ui", "handler", "handler.go"),
 	}
-	defer f.Close()
+}
 
+func routesFromLines(t *testing.T, lines []string) map[string]struct{} {
+	t.Helper()
 	routes := make(map[string]struct{})
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		if m := handlerRoutePattern.FindStringSubmatch(sc.Text()); len(m) == 2 {
-			routes[m[1]] = struct{}{}
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
 		}
-	}
-	if err := sc.Err(); err != nil {
-		t.Fatalf("scan handler.go: %v", err)
+		if m := handlerRoutePattern.FindStringSubmatch(line); len(m) == 2 {
+			routes[m[1]] = struct{}{}
+			continue
+		}
+		routes[line] = struct{}{}
 	}
 	if len(routes) == 0 {
-		t.Fatal("no routes parsed from handler.go")
+		t.Fatal("no routes parsed")
 	}
 	return routes
+}
+
+// handlerRoutes reads admin-ui/handler/handler.go when present in the umbrella
+// checkout, otherwise falls back to the embedded route snapshot for standalone CI.
+func handlerRoutes(t *testing.T) map[string]struct{} {
+	t.Helper()
+	for _, path := range handlerGoCandidates() {
+		f, err := os.Open(path)
+		if err != nil {
+			continue
+		}
+		routes := make(map[string]struct{})
+		sc := bufio.NewScanner(f)
+		for sc.Scan() {
+			if m := handlerRoutePattern.FindStringSubmatch(sc.Text()); len(m) == 2 {
+				routes[m[1]] = struct{}{}
+			}
+		}
+		_ = f.Close()
+		if err := sc.Err(); err != nil {
+			t.Fatalf("scan handler.go: %v", err)
+		}
+		if len(routes) > 0 {
+			return routes
+		}
+	}
+	return routesFromLines(t, strings.Split(embeddedHandlerRoutes, "\n"))
 }
 
 func TestAdminUIRoutesMatchHandler(t *testing.T) {

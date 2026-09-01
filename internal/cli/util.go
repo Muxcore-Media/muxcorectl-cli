@@ -12,7 +12,6 @@ import (
 	"github.com/Muxcore-Media/core/sdk/go/client"
 	"github.com/Muxcore-Media/muxcorectl-cli/internal/connect"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -106,15 +105,11 @@ func dialModuleGRPC(moduleID, httpAddr string) (*grpc.ClientConn, error) {
 	if addr == "" {
 		return nil, fmt.Errorf("module %q has no dial address", moduleID)
 	}
-	opts := dialOpts()
-	var dialOpts []grpc.DialOption
-	if opts.Insecure {
-		dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		return nil, fmt.Errorf("TLS module dial not configured; use --insecure for local stacks")
+	dialOpts, err := meshGRPCDialOptions()
+	if err != nil {
+		return nil, err
 	}
-	if opts.Token != "" {
-		token := opts.Token
+	if token := resolveOperatorToken(); token != "" {
 		dialOpts = append(dialOpts,
 			grpc.WithUnaryInterceptor(func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, callOpts ...grpc.CallOption) error {
 				ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)

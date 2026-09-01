@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	mediaadminv1 "github.com/Muxcore-Media/contracts-media-admin/gen/muxcore/media/admin/v1"
 	"github.com/Muxcore-Media/core/sdk/go/client"
@@ -41,16 +42,20 @@ func newActivityCmd() *cobra.Command {
 						continue
 					}
 					cli := mediaadminv1.NewMediaAdminServiceClient(conn)
-					resp, err := cli.ListHistory(ctx, &mediaadminv1.ListHistoryRequest{
-						Page: 1, PageSize: 200, EventType: eventType,
-					})
+					req := &mediaadminv1.ListHistoryRequest{Page: 1, PageSize: 200}
+					if eventType != "" {
+						if v, ok := mediaadminv1.HistoryEventType_value[strings.ToUpper(eventType)]; ok {
+							req.EventType = mediaadminv1.HistoryEventType(v)
+						}
+					}
+					resp, err := cli.ListHistory(ctx, req)
 					_ = conn.Close()
 					if err != nil {
 						continue
 					}
 					for _, rec := range resp.GetRecords() {
 						out = append(out, row{
-							Module: mod.GetId(), EventType: rec.GetEventType(), Title: rec.GetTitle(),
+							Module: mod.GetId(), EventType: fmt.Sprint(rec.GetEventType()), Title: rec.GetTitle(),
 							Source: rec.GetSourceTitle(), Indexer: rec.GetIndexer(), At: rec.GetCreatedAt(),
 						})
 					}

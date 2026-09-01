@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Muxcore-Media/core/sdk/go/client"
 	rootsv1 "github.com/Muxcore-Media/media-root-folders/proto/rootsv1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const capMediaRoots = "media.roots"
@@ -184,19 +182,7 @@ func newRootsDeleteCmd() *cobra.Command {
 }
 
 func withRootsClient(fn func(context.Context, rootsv1.RootFolderServiceClient) error) error {
-	return withCore(func(ctx context.Context, c *client.Client) error {
-		mod, err := findModuleByCapability(ctx, c, capMediaRoots)
-		if err != nil {
-			return err
-		}
-		conn, err := grpc.NewClient(
-			normalizeDialAddr(mod.GetId(), mod.GetHttpAddr()),
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-		)
-		if err != nil {
-			return fmt.Errorf("dial roots: %w", err)
-		}
-		defer func() { _ = conn.Close() }()
+	return withModuleConn(capMediaRoots, func(ctx context.Context, conn *grpc.ClientConn) error {
 		return fn(ctx, rootsv1.NewRootFolderServiceClient(conn))
 	})
 }

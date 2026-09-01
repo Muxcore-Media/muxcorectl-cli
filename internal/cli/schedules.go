@@ -51,6 +51,9 @@ func newSchedulesListCmd() *cobra.Command {
 			if err := json.Unmarshal(body, &tasks); err != nil {
 				return fmt.Errorf("decode list: %w", err)
 			}
+			if flagJSON {
+				return printJSON(tasks)
+			}
 			w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
 			_, _ = fmt.Fprintln(w, "ID\tNAME\tCRON\tSTATUS\tONCE\tLAST_FIRED")
 			for _, t := range tasks {
@@ -78,6 +81,13 @@ func newSchedulesStatusCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if flagJSON {
+				var out any
+				if err := json.Unmarshal(body, &out); err != nil {
+					return fmt.Errorf("decode status: %w", err)
+				}
+				return printJSON(out)
+			}
 			var pretty bytes.Buffer
 			if err := json.Indent(&pretty, body, "", "  "); err != nil {
 				_, _ = fmt.Println(string(body))
@@ -102,6 +112,13 @@ func newSchedulesCancelCmd() *cobra.Command {
 			body, err := schedulerDo(http.MethodDelete, base+"/cancel/"+args[0], nil)
 			if err != nil {
 				return err
+			}
+			if flagJSON {
+				var out any
+				if err := json.Unmarshal(body, &out); err != nil {
+					return printJSON(map[string]string{"status": strings.TrimSpace(string(body))})
+				}
+				return printJSON(out)
 			}
 			fmt.Println(strings.TrimSpace(string(body)))
 			return nil
@@ -146,6 +163,13 @@ func newSchedulesAddCmd() *cobra.Command {
 			body, err := schedulerDo(http.MethodPost, base+"/schedule", raw)
 			if err != nil {
 				return err
+			}
+			if flagJSON {
+				var out any
+				if err := json.Unmarshal(body, &out); err != nil {
+					return printJSON(map[string]string{"result": strings.TrimSpace(string(body))})
+				}
+				return printJSON(out)
 			}
 			fmt.Println(strings.TrimSpace(string(body)))
 			return nil
@@ -240,6 +264,9 @@ func schedulerDo(method, url string, body []byte) ([]byte, error) {
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	if auth := bearerAuthHeader(); auth != "" {
+		req.Header.Set("Authorization", auth)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

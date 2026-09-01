@@ -34,7 +34,7 @@ type playbackFile struct { //nolint:govet // fieldalignment: JSON field order ma
 }
 
 func playbackPath() string {
-	return envOr("ADMIN_UI_PLAYBACK_FILE", filepath.Join(os.TempDir(), "muxcore-admin-playback.json"))
+	return adminDataFile("ADMIN_UI_PLAYBACK_FILE", "playback.json")
 }
 
 func loadPlaybackFile() playbackFile {
@@ -172,7 +172,7 @@ type liveTVFile struct {
 }
 
 func livetvPath() string {
-	return envOr("ADMIN_UI_LIVETV_FILE", filepath.Join(os.TempDir(), "muxcore-admin-livetv.json"))
+	return adminDataFile("ADMIN_UI_LIVETV_FILE", "livetv.json")
 }
 
 func loadLiveTVFile() liveTVFile {
@@ -356,7 +356,7 @@ type brandingFile struct {
 }
 
 func brandingPath() string {
-	return envOr("ADMIN_UI_BRANDING_FILE", filepath.Join(os.TempDir(), "muxcore-admin-branding.json"))
+	return adminDataFile("ADMIN_UI_BRANDING_FILE", "branding.json")
 }
 
 func loadBrandingFile() brandingFile {
@@ -458,7 +458,7 @@ type networkingFile struct {
 }
 
 func networkingPath() string {
-	return envOr("ADMIN_UI_NETWORKING_FILE", filepath.Join(os.TempDir(), "muxcore-admin-networking.json"))
+	return adminDataFile("ADMIN_UI_NETWORKING_FILE", "networking.json")
 }
 
 func loadNetworkingFile() networkingFile {

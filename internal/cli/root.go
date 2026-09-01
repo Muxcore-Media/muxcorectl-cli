@@ -13,10 +13,11 @@ var Version = "dev"
 
 // root persistent flags shared by all RPCs.
 var (
-	flagAddr     string
-	flagInsecure bool
-	flagToken    string
-	flagTimeout  time.Duration
+	flagAddr      string
+	flagInsecure  bool
+	flagToken     string
+	flagTokenFile string
+	flagTimeout   time.Duration
 )
 
 // NewRoot builds the muxcorectl command tree.
@@ -44,6 +45,15 @@ Tips:
   --help on any command for examples`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := resolveTokenFile(); err != nil {
+				return err
+			}
+			if flagToken == "" {
+				flagToken = resolveOperatorToken()
+			}
+			return nil
+		},
 	}
 
 	root.AddGroup(
@@ -58,13 +68,15 @@ Tips:
 
 	root.PersistentFlags().StringVar(&flagAddr, "addr", env.Addr, "muxcored gRPC address (MUXCORE_GRPC_ADDR)")
 	root.PersistentFlags().BoolVar(&flagInsecure, "insecure", env.Insecure, "disable TLS (MUXCORE_INSECURE_DISABLE_TLS)")
-	root.PersistentFlags().StringVar(&flagToken, "token", env.Token, "bearer token (MUXCORE_TOKEN)")
+	root.PersistentFlags().StringVar(&flagToken, "token", "", "bearer token (prefer MUXCORE_TOKEN env or --token-file)")
+	root.PersistentFlags().StringVar(&flagTokenFile, "token-file", "", "read bearer token from file (MUXCORE_TOKEN_FILE)")
 	root.PersistentFlags().DurationVar(&flagTimeout, "timeout", env.Timeout, "per-RPC timeout")
 	root.PersistentFlags().BoolVar(&flagJSON, "json", false, "emit JSON instead of tables")
 	root.PersistentFlags().BoolVar(&flagQuiet, "quiet", false, "suppress non-essential output")
 	root.PersistentFlags().BoolVar(&flagYes, "yes", false, "assume yes to confirmation prompts")
 
 	root.AddCommand(newVersionCmd())
+	root.AddCommand(newCompletionCmd())
 	root.AddCommand(newModulesCmd())
 	root.AddCommand(newClusterCmd())
 	root.AddCommand(newHealthCmd())

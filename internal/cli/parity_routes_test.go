@@ -205,6 +205,14 @@ var adminUIRouteCoverage = map[string]string{
 	"GET /networking":            "networking show",
 	"POST /networking":           "networking set",
 
+	// Music / tagging (admin-ui pages; CLI parity pending)
+	"GET /music":                        "",
+	"GET /music/{id}":                   "",
+	"GET /tagging":                      "",
+	"POST /tagging/tags":                "",
+	"POST /tagging/rules":               "",
+	"POST /tagging/rules/{id}/delete":   "",
+
 	// Intentionally unsupported (browser-only or in-memory admin-ui state)
 	"GET /login":                   "",
 	"POST /login":                  "",

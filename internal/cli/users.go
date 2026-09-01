@@ -1,15 +1,16 @@
 package cli
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"strings"
+	"syscall"
 
 	authv1 "github.com/Muxcore-Media/core/proto/gen/muxcore/auth/v1"
 	"github.com/Muxcore-Media/core/sdk/go/client"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 )
 
 func newUsersCmd() *cobra.Command {
@@ -31,6 +32,10 @@ func newUsersCmd() *cobra.Command {
 }
 
 func withAuth(fn func(ctx context.Context, auth authv1.AuthServiceClient) error) error {
+	return withAuthDial(fn)
+}
+
+var withAuthDial = func(fn func(ctx context.Context, auth authv1.AuthServiceClient) error) error {
 	return withCore(func(ctx context.Context, c *client.Client) error {
 		mod, err := findModuleByCapability(ctx, c, "auth")
 		if err != nil {
@@ -73,20 +78,18 @@ func newUsersListCmd() *cobra.Command {
 }
 
 func newUsersCreateCmd() *cobra.Command {
-	var password string
+	var password, passwordFile string
 	cmd := &cobra.Command{
 		Use:   "create <username>",
 		Short: "Create a user (prompts for password unless --password is set)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			username := args[0]
-			pass := password
-			if pass == "" {
-				var err error
-				pass, err = readPassword("Password: ")
-				if err != nil {
-					return err
-				}
+			pass, err := readSecretFlagOrFile(password, passwordFile, "Password: ")
+			if err != nil {
+				return err
+			}
+			if password == "" && passwordFile == "" {
 				confirm, err := readPassword("Confirm: ")
 				if err != nil {
 					return err
@@ -114,7 +117,8 @@ func newUsersCreateCmd() *cobra.Command {
 			})
 		},
 	}
-	cmd.Flags().StringVar(&password, "password", "", "password (non-interactive)")
+	cmd.Flags().StringVar(&password, "password", "", "password (non-interactive; prefer --password-file)")
+	cmd.Flags().StringVar(&passwordFile, "password-file", "", "read password from file")
 	return cmd
 }
 
@@ -145,19 +149,15 @@ func newUsersDeleteCmd() *cobra.Command {
 }
 
 func newUsersPasswordCmd() *cobra.Command {
-	var password string
+	var password, passwordFile string
 	cmd := &cobra.Command{
 		Use:   "password <user-id>",
 		Short: "Set a user's password",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pass := password
-			if pass == "" {
-				var err error
-				pass, err = readPassword("New password: ")
-				if err != nil {
-					return err
-				}
+			pass, err := readSecretFlagOrFile(password, passwordFile, "New password: ")
+			if err != nil {
+				return err
 			}
 			return withAuth(func(ctx context.Context, auth authv1.AuthServiceClient) error {
 				resp, err := auth.SetPassword(ctx, &authv1.SetPasswordRequest{
@@ -177,7 +177,8 @@ func newUsersPasswordCmd() *cobra.Command {
 			})
 		},
 	}
-	cmd.Flags().StringVar(&password, "password", "", "new password (non-interactive)")
+	cmd.Flags().StringVar(&password, "password", "", "new password (non-interactive; prefer --password-file)")
+	cmd.Flags().StringVar(&passwordFile, "password-file", "", "read password from file")
 	return cmd
 }
 
@@ -495,10 +496,10 @@ func newUsersPasskeysCmd() *cobra.Command {
 
 func readPassword(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
-	reader := bufio.NewReader(os.Stdin)
-	line, err := reader.ReadString('\n')
+	b, err := term.ReadPassword(int(syscall.Stdin))
+	fmt.Fprintln(os.Stderr)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(line), nil
+	return strings.TrimSpace(string(b)), nil
 }

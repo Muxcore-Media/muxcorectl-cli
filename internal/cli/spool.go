@@ -8,7 +8,6 @@ import (
 	"github.com/Muxcore-Media/muxcorectl-cli/internal/connect"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -65,11 +64,9 @@ func newSpoolCmd() *cobra.Command {
 }
 
 func dialRaw(opts connect.Options) (*grpc.ClientConn, error) {
-	var dialOpts []grpc.DialOption
-	if opts.Insecure {
-		dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	} else {
-		return nil, fmt.Errorf("TLS dial not configured; set MUXCORE_INSECURE_DISABLE_TLS=true or --insecure for laptop use")
+	dialOpts, err := meshGRPCDialOptions()
+	if err != nil {
+		return nil, err
 	}
 	return grpc.NewClient(opts.Addr, dialOpts...)
 }
