@@ -31,8 +31,14 @@ func TestLiveSmoke(t *testing.T) {
 		env = append(env, "MUXCORE_GRPC_ADDR=127.0.0.1:9090")
 	}
 	if v := os.Getenv("MUXCORE_TOKEN"); v == "" {
-		if tok, err := os.ReadFile(filepath.Join("..", "..", "_mvp", "run", "admin.token")); err == nil {
-			env = append(env, "MUXCORE_TOKEN="+strings.TrimSpace(string(tok)))
+		for _, p := range []string{
+			filepath.Join("..", "..", "..", "_mvp", "run", "admin.token"),
+			filepath.Join("..", "..", "_mvp", "run", "admin.token"),
+		} {
+			if tok, err := os.ReadFile(p); err == nil {
+				env = append(env, "MUXCORE_TOKEN="+strings.TrimSpace(string(tok)))
+				break
+			}
 		}
 	}
 

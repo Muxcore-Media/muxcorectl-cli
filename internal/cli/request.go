@@ -116,12 +116,15 @@ func newRequestAddCmd() *cobra.Command {
 			if itemType == "" {
 				itemType = "movie"
 			}
+			headers, ident, err := requestIdentityHeaders()
+			if err != nil {
+				return err
+			}
 			payload, _ := json.Marshal(map[string]any{
 				"tmdbId": tmdbID, "title": title, "year": year,
 				"overview": overview, "type": itemType,
-				"requestedBy": "muxcorectl", "isAdmin": true,
+				"requestedBy": ident.Username, "isAdmin": ident.IsAdmin,
 			})
-			headers := map[string]string{"X-MuxCore-User": "muxcorectl", "X-MuxCore-Roles": "admin"}
 			return withRequestBase(func(base string) error {
 				body, err := httpDo(http.MethodPost, base+"/api/request", payload, headers)
 				if err != nil {
@@ -172,8 +175,15 @@ func newRequestDenyCmd() *cobra.Command {
 }
 
 func requestDecide(id, action string) error {
-	payload, _ := json.Marshal(map[string]string{"approvedBy": "muxcorectl"})
-	headers := map[string]string{"X-MuxCore-User": "muxcorectl", "X-MuxCore-Roles": "admin"}
+	headers, ident, err := requestIdentityHeaders()
+	if err != nil {
+		return err
+	}
+	by := ident.Username
+	if by == "" {
+		by = "muxcorectl"
+	}
+	payload, _ := json.Marshal(map[string]string{"approvedBy": by, "by": by})
 	return withRequestBase(func(base string) error {
 		_, err := httpDo(http.MethodPost, base+"/api/requests/"+url.PathEscape(id)+"/"+action, payload, headers)
 		if err != nil {

@@ -1,6 +1,8 @@
 /bin/
 /dist/
 /muxcorectl
+go.work
+go.work.sum
 *.exe
 *.test
 .idea/

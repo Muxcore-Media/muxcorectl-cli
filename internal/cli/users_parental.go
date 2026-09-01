@@ -18,7 +18,7 @@ type parentalSettings struct {
 }
 
 func parentalPath() string {
-	return envOr("ADMIN_UI_PARENTAL_FILE", filepath.Join(os.TempDir(), "muxcore-admin-parental.json"))
+	return adminDataFile("ADMIN_UI_PARENTAL_FILE", "parental.json")
 }
 
 func loadParentalMap() map[string]parentalSettings {

@@ -6,19 +6,31 @@ Talks to muxcored over gRPC (core SDK client) and discovers module HTTP/gRPC end
 
 ## Install
 
+**From a release** (recommended for household installs):
+
+Download `muxcorectl` for your platform from the [Forgejo releases](https://git.zem.systems/muxcore/muxcorectl-cli/releases) page, or build locally:
+
 ```bash
-go install github.com/Muxcore-Media/muxcorectl-cli/cmd/muxcorectl@latest
+git clone ssh://forgejo@git.zem.systems:2222/muxcore/muxcorectl-cli.git
+cd muxcorectl-cli
+make build    # writes bin/muxcorectl
 ```
 
-Or build from this repo:
+**From source** (requires Forgejo module access):
 
 ```bash
-export PATH="$HOME/.local/go/bin:$PATH"
 export GOPRIVATE=github.com/Muxcore-Media/*
-go build -o bin/muxcorectl ./cmd/muxcorectl
+export GIT_TERMINAL_PROMPT=0
+git config --global url."ssh://forgejo@git.zem.systems:2222/muxcore/".insteadOf "https://github.com/Muxcore-Media/"
+
+git clone ssh://forgejo@git.zem.systems:2222/muxcore/muxcorectl-cli.git
+cd muxcorectl-cli
+make build
 ```
 
-Requires Go 1.26+.
+Requires Go 1.26+. A standalone clone resolves modules from Forgejo — no sibling module checkouts required.
+
+**Umbrella workspace dev:** copy `go.work.example` to `go.work` (gitignored) to overlay local sibling modules.
 
 ## Quick start (local laptop stack)
 
@@ -77,7 +89,8 @@ Full deploy/smoke reference: workspace [`AGENTS.md`](../AGENTS.md) and [`README-
 |------|-----|---------|
 | `--addr` | `MUXCORE_GRPC_ADDR` | muxcored gRPC address (default `127.0.0.1:9090`) |
 | `--insecure` | `MUXCORE_INSECURE_DISABLE_TLS` | Disable TLS for local dev |
-| `--token` | `MUXCORE_TOKEN` / `MUXCORE_ADMIN_TOKEN` | Bearer token for protected RPCs |
+| `--token` | `MUXCORE_TOKEN` / `MUXCORE_ADMIN_TOKEN` | Bearer token for protected RPCs and HTTP module APIs |
+| `--token-file` | `MUXCORE_TOKEN_FILE` | Read bearer token from file instead of argv |
 | `--timeout` | — | Per-RPC timeout (default `15s`) |
 | `--json` | — | Machine-readable JSON output |
 | `--quiet` | — | Suppress success messages |
@@ -93,10 +106,19 @@ Optional module URL overrides (when discovery is unavailable):
 | `ADMIN_UI_PARENTAL_FILE` | Per-user parental controls JSON |
 | `ADMIN_UI_BRANDING_FILE` | Branding settings file |
 | `ADMIN_UI_NETWORKING_FILE` | Published URL / proxy settings |
+| `ADMIN_UI_DATA_DIR` | Root for CLI/admin-ui JSON state (default `~/.muxcore/admin-ui`) |
+
+## Shell completion
+
+```bash
+muxcorectl completion bash > /etc/bash_completion.d/muxcorectl
+muxcorectl completion zsh  > "${fpath[1]}/_muxcorectl"
+muxcorectl completion fish > ~/.config/fish/completions/muxcorectl.fish
+```
 
 ## admin-ui parity
 
-**216 HTTP routes** in `admin-ui/handler/handler.go` are mapped in `parity_routes_test.go`. CI verifies every route has a CLI equivalent or is documented as browser-only.
+**216 HTTP routes** in `admin-ui/handler/handler.go` are mapped in `parity_routes_test.go` (222 including music/tagging stubs). CI verifies every route has a CLI equivalent or is documented as browser-only.
 
 ### Intentionally browser-only (no CLI equivalent)
 

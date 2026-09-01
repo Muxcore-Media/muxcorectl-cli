@@ -55,7 +55,15 @@ func newEventsCmd() *cobra.Command {
 						return nil
 					}
 					ts := time.Now().Format(time.RFC3339)
-					fmt.Printf("%s type=%s source=%s bytes=%d\n", ts, ev.GetType(), ev.GetSource(), len(ev.GetPayload()))
+					if flagJSON {
+						if err := printJSON(map[string]any{
+							"ts": ts, "type": ev.GetType(), "source": ev.GetSource(), "bytes": len(ev.GetPayload()),
+						}); err != nil {
+							return err
+						}
+					} else {
+						fmt.Printf("%s type=%s source=%s bytes=%d\n", ts, ev.GetType(), ev.GetSource(), len(ev.GetPayload()))
+					}
 					n++
 					if maxEvents > 0 && n >= maxEvents {
 						return nil

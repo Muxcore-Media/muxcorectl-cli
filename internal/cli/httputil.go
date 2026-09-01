@@ -51,7 +51,7 @@ func httpDo(method, url string, body []byte, headers map[string]string) ([]byte,
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	for k, v := range headers {
+	for k, v := range withBearerAuth(headers) {
 		req.Header.Set(k, v)
 	}
 	resp, err := http.DefaultClient.Do(req)
