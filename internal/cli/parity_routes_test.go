@@ -208,6 +208,7 @@ var adminUIRouteCoverage = map[string]string{
 	// Music / tagging (admin-ui pages; CLI parity pending)
 	"GET /music":                        "",
 	"GET /music/{id}":                   "",
+	"GET /ai":                           "ai status",
 	"GET /tagging":                      "",
 	"POST /tagging/tags":                "",
 	"POST /tagging/rules":               "",

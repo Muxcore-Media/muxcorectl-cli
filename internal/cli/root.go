@@ -120,6 +120,7 @@ Tips:
 	root.AddCommand(newNetworkingCmd())
 	root.AddCommand(newActivityCmd())
 	root.AddCommand(newMigrateCmd())
+	root.AddCommand(newAICmd())
 
 	return root
 }
