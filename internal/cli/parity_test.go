@@ -13,7 +13,7 @@ func TestRootRegistersAdminCommands(t *testing.T) {
 		"schedules", "tasks", "settings", "users", "devices", "invites", "keys", "auth",
 		"storage", "backups", "config", "plugins", "branding", "networking", "jellyfin",
 		"maintainer", "list-sync", "import", "streams", "transcode",
-		"playback", "livetv",
+		"playback", "livetv", "ai",
 	}
 	seen := map[string]bool{}
 	for _, c := range root.Commands() {

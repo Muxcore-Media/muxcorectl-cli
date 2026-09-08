@@ -3,6 +3,7 @@ DELETE /users/{id}/passkeys/{credId}
 DELETE /users/{id}/tokens/{tokenId}
 GET /
 GET /activity
+GET /ai
 GET /api/auth/passkey/register/{id}/begin
 GET /audit
 GET /auth

@@ -1,12 +1,12 @@
 module github.com/Muxcore-Media/muxcorectl-cli
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/Muxcore-Media/admin-ui v0.1.9
 	github.com/Muxcore-Media/backup-local v0.1.2
-	github.com/Muxcore-Media/contracts-automation v0.1.0
-	github.com/Muxcore-Media/contracts-media-admin v0.1.0
+	github.com/Muxcore-Media/contracts-automation v0.1.1-0.20260824174909-b7b0cb83d8b3
+	github.com/Muxcore-Media/contracts-media-admin v0.1.1-0.20260905225357-350de7622545
 	github.com/Muxcore-Media/contracts-scanner v0.1.0
 	github.com/Muxcore-Media/core v0.5.8
 	github.com/Muxcore-Media/core/sdk/go/client v0.5.8
