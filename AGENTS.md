@@ -32,3 +32,4 @@ muxcorectl health status
 - Parity tests in `internal/cli/parity_*` guard admin API route coverage — extend when adding CLI commands.
 - Do not confuse with quarantined `muxcorectl/` workspace dump; this repo is canonical.
 - Match existing cobra command structure under `internal/cli/`.
+- Roadmaps, task lists, and remaining-work checklists live in workspace [`MASTER-ROADMAP.md`](../MASTER-ROADMAP.md) and umbrella GitHub Issues. Do not add `ROADMAP.md` / `TASKS.md` in this repo.
