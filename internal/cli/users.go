@@ -496,7 +496,7 @@ func newUsersPasskeysCmd() *cobra.Command {
 
 func readPassword(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
-	b, err := term.ReadPassword(int(syscall.Stdin))
+	b, err := term.ReadPassword(syscall.Stdin)
 	fmt.Fprintln(os.Stderr)
 	if err != nil {
 		return "", err

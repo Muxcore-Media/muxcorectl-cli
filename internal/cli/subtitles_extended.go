@@ -13,7 +13,6 @@ func newSubtitlesProfilesCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "profiles", Short: "Language profile commands"}
 	cmd.AddCommand(newSubtitlesProfilesListCmd())
 	cmd.AddCommand(newSubtitlesProfilesCreateCmd())
-	cmd.AddCommand(newSubtitlesProfilesDeleteCmd())
 	return cmd
 }
 
@@ -101,29 +100,6 @@ func newSubtitlesProfilesCreateCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("languages")
 	cmd.Flags().BoolVar(&isDefault, "default", false, "set as default profile")
 	return cmd
-}
-
-func newSubtitlesProfilesDeleteCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "delete <profile-id>",
-		Short: "Delete a language profile",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := confirmAction("Delete profile " + args[0] + "?"); err != nil {
-				return err
-			}
-			return withSubtitlesClient(func(ctx context.Context, cli subtv1.SubtitleServiceClient) error {
-				_, err := cli.DeleteLanguageProfile(ctx, &subtv1.DeleteLanguageProfileRequest{Id: args[0]})
-				if err != nil {
-					return fmt.Errorf("subtitles profiles delete: %w", err)
-				}
-				if !flagQuiet {
-					fmt.Println("deleted")
-				}
-				return nil
-			})
-		},
-	}
 }
 
 func newSubtitlesMediaCmd() *cobra.Command {

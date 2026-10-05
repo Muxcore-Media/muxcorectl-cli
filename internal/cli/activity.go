@@ -55,7 +55,7 @@ func newActivityCmd() *cobra.Command {
 					}
 					for _, rec := range resp.GetRecords() {
 						out = append(out, row{
-							Module: mod.GetId(), EventType: fmt.Sprint(rec.GetEventType()), Title: rec.GetTitle(),
+							Module: mod.GetId(), EventType: rec.GetEventType().String(), Title: rec.GetTitle(),
 							Source: rec.GetSourceTitle(), Indexer: rec.GetIndexer(), At: rec.GetCreatedAt(),
 						})
 					}
