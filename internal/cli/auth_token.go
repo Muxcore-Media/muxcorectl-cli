@@ -20,7 +20,7 @@ func resolveOperatorToken() string {
 		return strings.TrimSpace(flagToken)
 	}
 	if v := strings.TrimSpace(os.Getenv("MUXCORE_TOKEN_FILE")); v != "" {
-		if b, err := os.ReadFile(v); err == nil {
+		if b, err := os.ReadFile(v); err == nil { //nolint:gosec // G304: operator-supplied token file path is intended
 			return strings.TrimSpace(string(b))
 		}
 	}
@@ -108,7 +108,7 @@ func resolveTokenFile() error {
 	if path == "" {
 		return nil
 	}
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(path) //nolint:gosec // G304: operator-supplied token file path is intended
 	if err != nil {
 		return fmt.Errorf("read token file: %w", err)
 	}
@@ -121,7 +121,7 @@ func readSecretFlagOrFile(flagValue, filePath, prompt string) (string, error) {
 		return strings.TrimSpace(flagValue), nil
 	}
 	if strings.TrimSpace(filePath) != "" {
-		b, err := os.ReadFile(filePath)
+		b, err := os.ReadFile(filePath) //nolint:gosec // G304: operator-supplied password file path is intended
 		if err != nil {
 			return "", fmt.Errorf("read password file: %w", err)
 		}

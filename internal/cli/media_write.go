@@ -325,9 +325,10 @@ func newMediaCollectionsMonitorCmd() *cobra.Command {
 			if err != nil || id == 0 {
 				return fmt.Errorf("invalid collection id")
 			}
+			searchOnAdd := true
 			return withMovieClient(args[0], func(ctx context.Context, cli mgmntv1.MovieManagementServiceClient) error {
 				_, err := cli.SetCollectionMonitored(ctx, &mgmntv1.SetCollectionMonitoredRequest{
-					CollectionId: int32(id), Monitored: monitored, SearchOnAdd: true, //nolint:gosec // validated positive collection id
+					CollectionId: int32(id), Monitored: monitored, SearchOnAdd: &searchOnAdd, //nolint:gosec // validated positive collection id
 				})
 				if err != nil {
 					return fmt.Errorf("collection monitor: %w", err)
@@ -410,7 +411,7 @@ func newMediaArtworkCmd() *cobra.Command {
 				}
 				rows := make([][]string, 0, len(resp.GetArtwork()))
 				for _, a := range resp.GetArtwork() {
-					rows = append(rows, []string{fmt.Sprint(a.GetType()), a.GetUrl()})
+					rows = append(rows, []string{a.GetType().String(), a.GetUrl()})
 				}
 				return printTable([]string{"TYPE", "URL"}, rows)
 			})

@@ -75,7 +75,7 @@ func newListSyncSyncCmd() *cobra.Command {
 					return printJSON(resp)
 				}
 				if !flagQuiet {
-					fmt.Printf("found=%d new=%d removed=%d\n", resp.GetItemsFound(), resp.GetItemsNew(), resp.GetItemsRemoved())
+					fmt.Printf("found=%d new=%d\n", resp.GetItemsFound(), resp.GetItemsNew())
 				}
 				return nil
 			})
@@ -178,12 +178,10 @@ func newListSyncAddCmd() *cobra.Command {
 func newListSyncUpdateCmd() *cobra.Command {
 	var (
 		name, listURL, username, clientID, baseURL, apiKey string
-		qualityProfile, rootFolder, cleanLevel, tagIDs     string
-		monitorMode, minAvailability                       string
+		qualityProfile, rootFolder                         string
 		interval                                           int32
 		enabled                                            bool
-		searchOnAdd                                        bool
-		hasEnabled, hasSearchOnAdd, hasInterval            bool
+		hasEnabled, hasInterval                            bool
 	)
 	cmd := &cobra.Command{
 		Use:   "update <source-id>",
@@ -192,49 +190,34 @@ func newListSyncUpdateCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req := &listsyncv1.UpdateSourceRequest{Id: args[0]}
 			if name != "" {
-				req.Name = name
+				req.Name = &name
 			}
 			if listURL != "" {
-				req.ListUrl = listURL
+				req.ListUrl = &listURL
 			}
 			if username != "" {
-				req.Username = username
+				req.Username = &username
 			}
 			if clientID != "" {
-				req.ClientId = clientID
+				req.ClientId = &clientID
 			}
 			if baseURL != "" {
-				req.BaseUrl = baseURL
+				req.BaseUrl = &baseURL
 			}
 			if apiKey != "" {
-				req.ApiKey = apiKey
+				req.ApiKey = &apiKey
 			}
 			if qualityProfile != "" {
-				req.QualityProfileId = qualityProfile
+				req.QualityProfileId = &qualityProfile
 			}
 			if rootFolder != "" {
-				req.RootFolderPath = rootFolder
-			}
-			if cleanLevel != "" {
-				req.CleanLibraryLevel = cleanLevel
-			}
-			if tagIDs != "" {
-				req.TagIds = tagIDs
-			}
-			if monitorMode != "" {
-				req.MonitorMode = monitorMode
-			}
-			if minAvailability != "" {
-				req.MinimumAvailability = minAvailability
+				req.RootFolderPath = &rootFolder
 			}
 			if hasInterval {
-				req.SyncIntervalMinutes = interval
+				req.SyncIntervalMinutes = &interval
 			}
 			if hasEnabled {
 				req.Enabled = &enabled
-			}
-			if hasSearchOnAdd {
-				req.SearchOnAdd = &searchOnAdd
 			}
 			return withListSyncClient(func(ctx context.Context, cli listsyncv1.ListSyncServiceClient) error {
 				resp, err := cli.UpdateSource(ctx, req)
@@ -259,16 +242,10 @@ func newListSyncUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&apiKey, "api-key", "", "api key (empty keeps existing)")
 	cmd.Flags().StringVar(&qualityProfile, "quality-profile", "", "quality profile id")
 	cmd.Flags().StringVar(&rootFolder, "root-folder", "", "root folder path")
-	cmd.Flags().StringVar(&cleanLevel, "clean-level", "", "clean library level")
-	cmd.Flags().StringVar(&tagIDs, "tags", "", "tag ids")
-	cmd.Flags().StringVar(&monitorMode, "monitor-mode", "", "monitor mode")
-	cmd.Flags().StringVar(&minAvailability, "min-availability", "", "minimum availability")
 	cmd.Flags().Int32Var(&interval, "interval", 60, "sync interval minutes")
 	cmd.Flags().BoolVar(&hasInterval, "set-interval", false, "apply --interval")
 	cmd.Flags().BoolVar(&enabled, "enabled", true, "source enabled")
 	cmd.Flags().BoolVar(&hasEnabled, "set-enabled", false, "apply --enabled")
-	cmd.Flags().BoolVar(&searchOnAdd, "search-on-add", true, "search on add")
-	cmd.Flags().BoolVar(&hasSearchOnAdd, "set-search-on-add", false, "apply --search-on-add")
 	return cmd
 }
 
