@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.3] - 2026-10-05
+
+
+### Changed
+- Bump core v0.6.12, sdk/go/client v0.6.1 and all sibling module requires to their latest tags (T-M3-03f).
+
 ## [0.1.2] - 2026-10-05
 
 
