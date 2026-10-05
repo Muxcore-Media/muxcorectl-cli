@@ -9,11 +9,37 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	discoveryv1 "github.com/Muxcore-Media/core/proto/gen/muxcore/discovery/v1"
 	"github.com/Muxcore-Media/muxcorectl-cli/internal/connect"
 	"github.com/spf13/cobra"
 )
+
+var flagSchedulerToken string
+
+// schedulerHTTPClient bounds every scheduler-cron request.
+var schedulerHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
+// resolveSchedulerToken returns --scheduler-token, else MUXCORE_SCHEDULER_TOKEN,
+// else SCHEDULER_HTTP_TOKEN.
+func resolveSchedulerToken() string {
+	// The operator (core) token is deliberately not used here: it is never valid
+	// for scheduler-cron and would only leak the admin credential to it.
+	return firstToken(flagSchedulerToken, "MUXCORE_SCHEDULER_TOKEN", "SCHEDULER_HTTP_TOKEN")
+}
+
+func firstToken(flagVal string, envKeys ...string) string {
+	if v := strings.TrimSpace(flagVal); v != "" {
+		return v
+	}
+	for _, k := range envKeys {
+		if v := strings.TrimSpace(os.Getenv(k)); v != "" {
+			return v
+		}
+	}
+	return ""
+}
 
 func newSchedulesCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -22,6 +48,7 @@ func newSchedulesCmd() *cobra.Command {
 		GroupID: groupAutomation,
 	}
 	cmd.PersistentFlags().String("scheduler-url", "", "scheduler-cron base URL (default: discover HttpAddr)")
+	cmd.PersistentFlags().StringVar(&flagSchedulerToken, "scheduler-token", "", "scheduler-cron bearer token (prefer MUXCORE_SCHEDULER_TOKEN or SCHEDULER_HTTP_TOKEN env)")
 	cmd.AddCommand(newSchedulesListCmd())
 	cmd.AddCommand(newSchedulesStatusCmd())
 	cmd.AddCommand(newSchedulesCancelCmd())
@@ -265,10 +292,10 @@ func schedulerDo(method, url string, body []byte) ([]byte, error) {
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	if auth := bearerAuthHeader(); auth != "" {
-		req.Header.Set("Authorization", auth)
+	if tok := resolveSchedulerToken(); tok != "" {
+		req.Header.Set("Authorization", "Bearer "+tok)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := schedulerHTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("schedules: %w", err)
 	}
@@ -276,6 +303,9 @@ func schedulerDo(method, url string, body []byte) ([]byte, error) {
 	out, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("schedules: HTTP 401 unauthorized: scheduler-cron requires a bearer token; pass --scheduler-token or set MUXCORE_SCHEDULER_TOKEN (or SCHEDULER_HTTP_TOKEN)")
 	}
 	if resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("schedules: HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(out)))

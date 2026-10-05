@@ -19,8 +19,18 @@ func healthMonitorURL() string {
 	return "http://127.0.0.1:9203"
 }
 
+var flagHealthMonitorToken string
+
+var healthMonitorHTTPClient = &http.Client{Timeout: 10 * time.Second}
+
+// resolveHealthMonitorToken returns --health-monitor-token, else
+// MUXCORE_HEALTH_MONITOR_TOKEN, else HEALTH_MONITOR_HTTP_TOKEN.
+func resolveHealthMonitorToken() string {
+	return firstToken(flagHealthMonitorToken, "MUXCORE_HEALTH_MONITOR_TOKEN", "HEALTH_MONITOR_HTTP_TOKEN")
+}
+
 func newHealthMonitorCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "monitor",
 		Short: "Fetch health monitor summary (admin-ui /dashboard/monitor parity)",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -31,7 +41,10 @@ func newHealthMonitorCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			resp, err := http.DefaultClient.Do(req)
+			if tok := resolveHealthMonitorToken(); tok != "" {
+				req.Header.Set("Authorization", "Bearer "+tok)
+			}
+			resp, err := healthMonitorHTTPClient.Do(req)
 			if err != nil {
 				return fmt.Errorf("health monitor: %w", err)
 			}
@@ -39,6 +52,9 @@ func newHealthMonitorCmd() *cobra.Command {
 			body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 			if err != nil {
 				return err
+			}
+			if resp.StatusCode == http.StatusUnauthorized {
+				return fmt.Errorf("health monitor HTTP 401 unauthorized: a bearer token is required; pass --health-monitor-token or set MUXCORE_HEALTH_MONITOR_TOKEN (or HEALTH_MONITOR_HTTP_TOKEN)")
 			}
 			if resp.StatusCode != http.StatusOK {
 				return fmt.Errorf("health monitor HTTP %s: %s", resp.Status, strings.TrimSpace(string(body)))
@@ -58,4 +74,6 @@ func newHealthMonitorCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().StringVar(&flagHealthMonitorToken, "health-monitor-token", "", "health-monitor bearer token (prefer MUXCORE_HEALTH_MONITOR_TOKEN or HEALTH_MONITOR_HTTP_TOKEN env)")
+	return cmd
 }
