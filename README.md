@@ -8,27 +8,27 @@ Talks to muxcored over gRPC (core SDK client) and discovers module HTTP/gRPC end
 
 **From a release** (recommended for household installs):
 
-Download `muxcorectl` for your platform from the [Forgejo releases](https://git.zem.systems/muxcore/muxcorectl-cli/releases) page, or build locally:
+Download `muxcorectl` for your platform from the [GitHub Releases](https://github.com/Muxcore-Media/muxcorectl-cli/releases) page, or build locally:
 
 ```bash
-git clone ssh://forgejo@git.zem.systems:2222/muxcore/muxcorectl-cli.git
+git clone https://github.com/Muxcore-Media/muxcorectl-cli.git
 cd muxcorectl-cli
 make build    # writes bin/muxcorectl
 ```
 
-**From source** (requires Forgejo module access):
+**From source** (requires GitHub access to the private `Muxcore-Media` modules):
 
 ```bash
 export GOPRIVATE=github.com/Muxcore-Media/*
 export GIT_TERMINAL_PROMPT=0
-git config --global url."ssh://forgejo@git.zem.systems:2222/muxcore/".insteadOf "https://github.com/Muxcore-Media/"
+gh auth setup-git
 
-git clone ssh://forgejo@git.zem.systems:2222/muxcore/muxcorectl-cli.git
+git clone https://github.com/Muxcore-Media/muxcorectl-cli.git
 cd muxcorectl-cli
 make build
 ```
 
-Requires Go 1.26+. A standalone clone resolves modules from Forgejo — no sibling module checkouts required.
+Requires Go 1.26+. A standalone clone resolves modules from GitHub — no sibling module checkouts required.
 
 **Umbrella workspace dev:** copy `go.work.example` to `go.work` (gitignored) to overlay local sibling modules.
 
