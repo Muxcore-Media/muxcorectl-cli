@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.2] - 2026-10-05
+
+
+### Added
+- `schedules --scheduler-token` and `health monitor --health-monitor-token` (env `MUXCORE_SCHEDULER_TOKEN`/`SCHEDULER_HTTP_TOKEN`, `MUXCORE_HEALTH_MONITOR_TOKEN`/`HEALTH_MONITOR_HTTP_TOKEN`) send `Authorization: Bearer` to scheduler-cron v0.1.7+ and health-monitor when bound off-loopback; HTTP 401 now reports how to supply the token.
+
+### Changed
+- scheduler-cron and health-monitor HTTP calls use a client with a timeout instead of `http.DefaultClient`.
+
 ## [0.1.1] - 2026-10-05
 
 ### Changed

@@ -103,6 +103,8 @@ Optional module URL overrides (when discovery is unavailable):
 | `MUXCORE_AUTH_URL` | auth-local HTTP base |
 | `MUXCORE_REQUEST_URL` | request-media HTTP base |
 | `MUXCORE_PLAYBACK_MONITOR_URL` | playback-monitor HTTP base |
+| `MUXCORE_SCHEDULER_TOKEN` (or `SCHEDULER_HTTP_TOKEN`) | Bearer token for scheduler-cron HTTP; flag `--scheduler-token` on `schedules` (required when scheduler-cron binds off-loopback) |
+| `MUXCORE_HEALTH_MONITOR_TOKEN` (or `HEALTH_MONITOR_HTTP_TOKEN`) | Bearer token for health-monitor `/status`; flag `--health-monitor-token` on `health monitor` (required when bound off-loopback) |
 | `ADMIN_UI_PARENTAL_FILE` | Per-user parental controls JSON |
 | `ADMIN_UI_BRANDING_FILE` | Branding settings file |
 | `ADMIN_UI_NETWORKING_FILE` | Published URL / proxy settings |

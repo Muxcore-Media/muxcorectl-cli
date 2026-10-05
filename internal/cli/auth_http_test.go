@@ -32,8 +32,9 @@ func TestHTTPDoBearerAuth(t *testing.T) {
 
 func TestSchedulerDoBearerAuth(t *testing.T) {
 	const want = "Bearer sched"
-	flagToken = "sched"
-	t.Cleanup(func() { flagToken = "" })
+	flagSchedulerToken = "sched"
+	flagToken = "operator-must-not-leak"
+	t.Cleanup(func() { flagSchedulerToken = ""; flagToken = "" })
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if got := r.Header.Get("Authorization"); got != want {

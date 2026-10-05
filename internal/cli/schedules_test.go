@@ -77,3 +77,54 @@ func TestSchedulerDoAddCancel(t *testing.T) {
 		t.Fatalf("cancel body=%s", body)
 	}
 }
+
+func TestSchedulerTokenHeader(t *testing.T) {
+	var got string
+	var status = http.StatusOK
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("Authorization")
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte("[]"))
+	}))
+	t.Cleanup(srv.Close)
+	t.Setenv("MUXCORE_TOKEN", "")
+	t.Setenv("MUXCORE_TOKEN_FILE", "")
+	t.Setenv("MUXCORE_ADMIN_TOKEN", "")
+	flagToken = ""
+	t.Setenv("MUXCORE_SCHEDULER_TOKEN", "")
+	t.Setenv("SCHEDULER_HTTP_TOKEN", "")
+	flagSchedulerToken = ""
+	t.Cleanup(func() { flagSchedulerToken = "" })
+
+	if _, err := schedulerDo(http.MethodGet, srv.URL+"/list", nil); err != nil {
+		t.Fatal(err)
+	}
+	if got != "" {
+		t.Fatalf("expected no Authorization, got %q", got)
+	}
+
+	t.Setenv("SCHEDULER_HTTP_TOKEN", "fallback")
+	_, _ = schedulerDo(http.MethodGet, srv.URL+"/list", nil)
+	if got != "Bearer fallback" {
+		t.Fatalf("got %q", got)
+	}
+	t.Setenv("MUXCORE_SCHEDULER_TOKEN", "primary")
+	_, _ = schedulerDo(http.MethodGet, srv.URL+"/list", nil)
+	if got != "Bearer primary" {
+		t.Fatalf("got %q", got)
+	}
+	flagSchedulerToken = "flagtok"
+	_, _ = schedulerDo(http.MethodGet, srv.URL+"/list", nil)
+	if got != "Bearer flagtok" {
+		t.Fatalf("got %q", got)
+	}
+
+	status = http.StatusUnauthorized
+	_, err := schedulerDo(http.MethodGet, srv.URL+"/list", nil)
+	if err == nil || !strings.Contains(err.Error(), "--scheduler-token") || !strings.Contains(err.Error(), "MUXCORE_SCHEDULER_TOKEN") {
+		t.Fatalf("err=%v", err)
+	}
+	if strings.Contains(err.Error(), "flagtok") {
+		t.Fatal("token leaked in error")
+	}
+}
