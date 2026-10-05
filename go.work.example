@@ -1,5 +1,5 @@
 # Umbrella workspace overlay — copy to go.work when developing inside the MuxCore
-# checkout (sibling modules under ../). Standalone Forgejo clones use go.mod only.
+# checkout (sibling modules under ../). Standalone clones use go.mod only.
 #
 #   cp go.work.example go.work
 #
