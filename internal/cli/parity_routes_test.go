@@ -287,7 +287,10 @@ var adminUIRouteCoverage = map[string]string{
 	"GET /streams/map":                                "streams map",
 	"GET /streams/map/data":                           "streams map",
 	"GET /users/{id}/parental":                        "users parental show",
-	"POST /users/{id}/parental":                       "users parental set",
+
+	// ADR-0031: restrictions live in userdata-local and are edited in admin-ui;
+	// `users parental set` was removed (it only fails with guidance).
+	"POST /users/{id}/parental": "",
 
 	// SSE live feed — use active session poll instead of browser SSE proxy
 	"GET /streams/events":                 "streams events",

@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- `users parental show` is read-only and labelled as the LEGACY, NON-AUTHORITATIVE `parental.json` (not what is enforced). It now shows `kids_mode` and whether a `pin_hash` is present (the hash is never printed), and a missing, unreadable or corrupt file is an explicit error instead of an empty result (ADR-0031).
+
+### Removed
+- `users parental set` no longer writes `parental.json`: it fails with a non-zero exit and points to admin-ui (`/users/{id}/parental`, one-time import at `/users/parental/migrate`). Parental restrictions are authoritative in userdata-local (ADR-0030) and enforced by the BFF (ADR-0031); the old write reported success for a file nothing enforces and dropped `kids_mode` and `pin_hash` from it.
+
 ## [0.1.4] - 2026-10-05
 
 ### Changed
