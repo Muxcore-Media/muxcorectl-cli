@@ -105,7 +105,7 @@ Optional module URL overrides (when discovery is unavailable):
 | `MUXCORE_PLAYBACK_MONITOR_URL` | playback-monitor HTTP base |
 | `MUXCORE_SCHEDULER_TOKEN` (or `SCHEDULER_HTTP_TOKEN`) | Bearer token for scheduler-cron HTTP; flag `--scheduler-token` on `schedules` (required when scheduler-cron binds off-loopback) |
 | `MUXCORE_HEALTH_MONITOR_TOKEN` (or `HEALTH_MONITOR_HTTP_TOKEN`) | Bearer token for health-monitor `/status`; flag `--health-monitor-token` on `health monitor` (required when bound off-loopback) |
-| `ADMIN_UI_PARENTAL_FILE` | Per-user parental controls JSON |
+| `ADMIN_UI_PARENTAL_FILE` | Legacy, non-enforced `parental.json`; read-only by `users parental show` (see below) |
 | `ADMIN_UI_BRANDING_FILE` | Branding settings file |
 | `ADMIN_UI_NETWORKING_FILE` | Published URL / proxy settings |
 | `ADMIN_UI_DATA_DIR` | Root for CLI/admin-ui JSON state (default `~/.muxcore/admin-ui`) |
@@ -131,6 +131,9 @@ muxcorectl completion fish > ~/.config/fish/completions/muxcorectl.fish
 | `/auth/callback`, `/auth/status` | SSO redirect flow |
 | `/branding.css` | Static asset |
 | `POST /devices/{token}/revoke` | Revokes in-memory admin-ui session only |
+| `POST /users/{id}/parental`, `/users/parental/migrate` | Parental restrictions are authoritative in userdata-local and edited in admin-ui (ADR-0030/0031); see below |
+
+**Parental controls.** Restrictions are stored by userdata-local and enforced by the BFF (ADR-0030, ADR-0031). Edit them in admin-ui at `/users/{id}/parental`, and import legacy settings once at `/users/parental/migrate`. `muxcorectl users parental set` has been removed: it exits non-zero with this guidance and writes nothing (it used to rewrite `parental.json`, which nothing enforces, and drop `kids_mode` and `pin_hash`). `muxcorectl users parental show <user-id>` remains as a read-only view of the legacy `parental.json` (`ADMIN_UI_PARENTAL_FILE`), labelled non-authoritative; it shows `kids_mode` and whether a `pin_hash` is present (never the hash), and reports a missing or corrupt file as an error.
 
 For `/devices`, run `muxcorectl devices` for guidance; use `users tokens`, `keys list`, or `audit query` for related admin tasks.
 
@@ -192,7 +195,8 @@ For `/devices`, run `muxcorectl devices` for guidance; use `users tokens`, `keys
 ### Access
 | Command | admin-ui | Description |
 |---------|----------|-------------|
-| `users list` / `create` / `password` / `roles` / `totp` / `tokens` / `passkeys` / `parental` | Users | Local auth users |
+| `users list` / `create` / `password` / `roles` / `totp` / `tokens` / `passkeys` | Users | Local auth users |
+| `users parental show` | Users | Read-only view of the **legacy, non-enforced** `parental.json` (see below) |
 | `devices` | Devices | Explains browser-session limitation |
 | `keys list` / `revoke` | API Keys | Cross-user token catalog |
 | `invites list` / `create` / `revoke` | Invites | Signup invite links |
