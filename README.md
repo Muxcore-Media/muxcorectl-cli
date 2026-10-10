@@ -196,6 +196,7 @@ For `/devices`, run `muxcorectl devices` for guidance; use `users tokens`, `keys
 | Command | admin-ui | Description |
 |---------|----------|-------------|
 | `users list` / `create` / `password` / `roles` / `totp` / `tokens` / `passkeys` | Users | Local auth users |
+| `users erasures [erasure-id]` | Users | Erasure completion per module (ADR-0035); needs an admin token; `--all` includes completed erasures |
 | `users parental show` | Users | Read-only view of the **legacy, non-enforced** `parental.json` (see below) |
 | `devices` | Devices | Explains browser-session limitation |
 | `keys list` / `revoke` | API Keys | Cross-user token catalog |

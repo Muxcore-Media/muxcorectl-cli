@@ -22,6 +22,7 @@ func newUsersCmd() *cobra.Command {
 	cmd.AddCommand(newUsersListCmd())
 	cmd.AddCommand(newUsersCreateCmd())
 	cmd.AddCommand(newUsersDeleteCmd())
+	cmd.AddCommand(newUsersErasuresCmd())
 	cmd.AddCommand(newUsersPasswordCmd())
 	cmd.AddCommand(newUsersRolesCmd())
 	cmd.AddCommand(newUsersTOTPCmd())
@@ -125,13 +126,16 @@ func newUsersCreateCmd() *cobra.Command {
 func newUsersDeleteCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <user-id>",
-		Short: "Delete a user by id",
+		Short: "Delete a user by id (starts an erasure, ADR-0035)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := confirmAction("Delete user " + args[0] + "?"); err != nil {
 				return err
 			}
 			return withAuth(func(ctx context.Context, auth authv1.AuthServiceClient) error {
+				// ADR-0035 §1: the provider requires the admin session in
+				// x-auth-token; without a token, send as before.
+				ctx, _ = withAdminToken(ctx)
 				resp, err := auth.DeleteUser(ctx, &authv1.DeleteUserRequest{UserId: args[0]})
 				if err != nil {
 					return fmt.Errorf("users delete: %w", err)
@@ -141,6 +145,9 @@ func newUsersDeleteCmd() *cobra.Command {
 				}
 				if !flagQuiet {
 					fmt.Println("deleted")
+					if id := resp.GetErasureId(); id != "" {
+						fmt.Printf("erasure_id: %s\n", id)
+					}
 				}
 				return nil
 			})
