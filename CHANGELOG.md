@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-10-10
+
 ### Added
 - `users erasures [erasure-id]` shows user-erasure completion from the identity provider's `GetUserErasureStatus` (ADR-0035 E9): one row per erasure and module with `ok` / `failed` / `unsupported` / `pending` outcomes, `--all` for completed erasures too, `--json` for scripts. It sends the administrator token in `x-auth-token` and never calls `ListUserErasures` / `AckUserErasure`, which admit only an allowlisted module certificate.
 
