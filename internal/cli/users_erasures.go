@@ -16,7 +16,7 @@ import (
 // attached explicitly. The CLI never calls ListUserErasures / AckUserErasure
 // (module-certificate only) and owns no personal-data store, so it runs no
 // reconciler.
-const authTokenMetadataKey = "x-auth-token"
+const authTokenMetadataKey = "x-auth-token" //nolint:gosec // G101: gRPC metadata key name, not a secret
 
 // withAdminToken attaches the operator token as x-auth-token. It reports
 // whether a token was available.
@@ -53,16 +53,16 @@ func erasureOutcomeLabel(o authv1.ErasureOutcome) string {
 type erasureModuleView struct {
 	ModuleID   string `json:"module_id"`
 	Outcome    string `json:"outcome"`
-	Required   bool   `json:"required"`
 	DetailCode string `json:"detail_code,omitempty"`
 	AckedAt    string `json:"acked_at,omitempty"`
+	Required   bool   `json:"required"`
 }
 
 type erasureView struct {
 	ErasureID string              `json:"erasure_id"`
 	DeletedAt string              `json:"deleted_at"`
-	Complete  bool                `json:"complete"`
 	Modules   []erasureModuleView `json:"modules"`
+	Complete  bool                `json:"complete"`
 }
 
 // newErasureView renders one ErasureStatus. An erasure is reported complete
