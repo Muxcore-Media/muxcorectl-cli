@@ -2,7 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+- `users erasures [erasure-id]` shows user-erasure completion from the identity provider's `GetUserErasureStatus` (ADR-0035 E9): one row per erasure and module with `ok` / `failed` / `unsupported` / `pending` outcomes, `--all` for completed erasures too, `--json` for scripts. It sends the administrator token in `x-auth-token` and never calls `ListUserErasures` / `AckUserErasure`, which admit only an allowlisted module certificate.
+
 ### Changed
+- Built on core v0.6.17 (auth `GetUserErasureStatus`, `DeleteUserResponse.erasure_id`).
+- `users delete` also sends the operator token in `x-auth-token`, which ADR-0035 §1 requires for `DeleteUser`, and prints the returned `erasure_id`. Delete semantics are unchanged.
 - `users parental show` is read-only and labelled as the LEGACY, NON-AUTHORITATIVE `parental.json` (not what is enforced). It now shows `kids_mode` and whether a `pin_hash` is present (the hash is never printed), and a missing, unreadable or corrupt file is an explicit error instead of an empty result (ADR-0031).
 
 ### Removed
